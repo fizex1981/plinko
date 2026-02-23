@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>👾 Plinko KIDS · Mobile -5% | PC -40% 👾</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        
+        body {
+            background: linear-gradient(145deg, #c9e9ff 0%, #ffd9f0 100%);
+            font-family: 'Quicksand', 'Segoe UI', 'Comic Neue', cursive, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+            padding: 0;
+        }
+        
+        /* LOADING PAGE - FULL SCREEN */
+        .loading-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            transition: opacity 0.8s ease;
+        }
+        .loading-page.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loading-image {
+            max-width: min(80%, 400px);
+            max-height: 70vh;
+            border-radius: 30px;
+            border: 4px solid #333;
+            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+        }
+        .loading-subtext {
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            color: #888;
+            margin-top: 20px;
+            text-align: center;
+            max-width: 80%;
+            letter-spacing: 2px;
+        }
+        
+        /* ===== MOBILE VERSION (DEFAULT) - 5% LEBIH KECIL ===== */
+        .game-wrapper {
+            background: #ffc145;
+            padding: min(17px, 2.85vw) min(11px, 1.9vw) min(24px, 3.8vw); /* 95% dari asal */
+            border-radius: min(76px, 9.5vw) min(76px, 9.5vw) min(48px, 5.7vw) min(48px, 5.7vw); /* 95% */
+            box-shadow: 0 min(19px, 2.85vw) 0 #b85b2a, 0 min(28px, 3.8vw) min(28px, 3.8vw) rgba(0,0,0,0.25); /* 95% */
+            border: min(5.7px, 1.14vw) solid #ffe9a7; /* 95% */
+            width: fit-content;
+            max-width: 100%;
+            max-height: 100vh;
+            position: relative;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            margin: auto;
+        }
+        .game-wrapper.show {
+            opacity: 1;
+        }
+        
+        /* Header container */
+        .header-container {
+            display: flex;
+            align-items: center;
+            gap: min(9.5px, 1.9vw); /* 95% */
+            margin: 0 min(14px, 1.9vw) min(14px, 1.9vw); /* 95% */
+        }
+        
+        .tap-container {
+            background: #fbefc7;
+            padding: min(7.6px, 1.43vw) min(19px, 2.85vw); /* 95% */
+            border-radius: 60px;
+            border: min(3.8px, 0.76vw) solid #ff9472; /* 95% */
+            box-shadow: 0 min(5.7px, 0.95vw) 0 #b15533; /* 95% */
+            display: flex;
+            align-items: center;
+            gap: min(9.5px, 1.9vw); /* 95% */
+            cursor: pointer;
+            transition: transform 0.05s ease;
+            flex: 1;
+            min-height: min(47.5px, 7.6vh); /* 95% */
+        }
+        .tap-container:active {
+            transform: translateY(min(3.8px, 0.76vw)); /* 95% */
+            box-shadow: 0 min(1.9px, 0.38vw) 0 #b15533; /* 95% */
+        }
+        
+        .tap-left {
+            display: flex;
+            align-items: center;
+            gap: min(7.6px, 1.43vw); /* 95% */
+        }
+        
+        .tap-emoji {
+            font-size: clamp(1.43rem, 5.7vw, 1.9rem); /* 95% */
+            filter: drop-shadow(2px 2px 0 #ff6f42);
+        }
+        
+        #tapText {
+            font-size: clamp(1.14rem, 4.75vw, 1.43rem); /* 95% */
+            font-weight: 700;
+            color: #3f260e;
+        }
+        
+        .controls-container {
+            display: flex;
+            align-items: center;
+            gap: min(7.6px, 1.43vw); /* 95% */
+            background: #ffad5a;
+            padding: min(7.6px, 1.43vw) min(14px, 2.38vw); /* 95% */
+            border-radius: 60px;
+            border: min(3.8px, 0.76vw) solid white; /* 95% */
+            box-shadow: 0 min(5.7px, 0.95vw) 0 #b45f2e; /* 95% */
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            font-size: clamp(1.71rem, 6.65vw, 1.9rem); /* 95% */
+            cursor: pointer;
+            padding: 0 min(7.6px, 1.43vw); /* 95% */
+            transition: transform 0.1s ease;
+            filter: drop-shadow(2px 2px 0 #b45f2e);
+        }
+        .control-btn:active {
+            transform: translateY(min(3.8px, 0.76vw)); /* 95% */
+            filter: drop-shadow(0 0 0 #b45f2e);
+        }
+        
+        /* CANVAS - 5% LEBIH KECIL UNTUK MOBILE */
+        canvas {
+            display: block;
+            width: min(95%, 427px); /* 95% dari 450px */
+            height: auto;
+            max-height: calc(100vh - min(171px, 23.75vh)); /* 95% */
+            aspect-ratio: 450 / 650;
+            border-radius: min(47.5px, 7.6vw); /* 95% */
+            background: #fffbf0;
+            box-shadow: inset 0 0 0 min(7.6px, 1.43vw) #fec37f, 0 min(11.4px, 1.9vw) 0 #9f4d26; /* 95% */
+            cursor: pointer;
+            touch-action: none;
+            margin: 0 auto;
+        }
+        
+        /* STATS PANEL - 5% LEBIH KECIL */
+        .stats-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff1cf;
+            padding: min(7.6px, 1.43vw) min(19px, 2.85vw); /* 95% */
+            margin: min(14px, 1.9vw) min(14px, 1.9vw) 0; /* 95% */
+            border-radius: min(66.5px, 9.5vw); /* 95% */
+            border: min(3.8px, 0.76vw) solid #ffa56e; /* 95% */
+            box-shadow: inset 0 min(-3.8px, -0.76vw) 0 #c06737, 0 min(9.5px, 1.71vw) 0 #a05028; /* 95% */
+            font-size: clamp(1.14rem, 4.75vw, 1.43rem); /* 95% */
+            font-weight: 700;
+            color: #4d2b13;
+            gap: min(9.5px, 1.9vw); /* 95% */
+            flex-wrap: wrap;
+            min-height: min(57px, 9.5vh); /* 95% */
+        }
+        
+        .candy-box {
+            display: flex;
+            align-items: center;
+            gap: min(7.6px, 1.43vw); /* 95% */
+            background: white;
+            padding: min(5.7px, 1.14vw) min(19px, 2.85vw); /* 95% */
+            border-radius: 60px;
+            border: min(3.8px, 0.76vw) solid #ffad5a; /* 95% */
+            box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e; /* 95% */
+        }
+        .candy-box span {
+            font-size: clamp(1.43rem, 5.7vw, 1.71rem); /* 95% */
+            line-height: 1;
+        }
+
+        .best-box {
+            display: flex;
+            align-items: center;
+            gap: min(4.75px, 0.95vw); /* 95% */
+            background: #ffe582;
+            padding: min(5.7px, 1.14vw) min(19px, 2.85vw); /* 95% */
+            border-radius: 60px;
+            border: min(3.8px, 0.76vw) solid #ff8a5c; /* 95% */
+            box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e; /* 95% */
+        }
+        .best-box span {
+            font-size: clamp(1.43rem, 5.7vw, 1.71rem); /* 95% */
+        }
+        #bestScoreDisplay {
+            background: white;
+            border-radius: 30px;
+            padding: min(1.9px, 0.38vw) min(11.4px, 1.9vw); /* 95% */
+            min-width: min(47.5px, 11.4vw); /* 95% */
+            text-align: center;
+            font-weight: 800;
+            box-shadow: inset 0 min(-1.9px, -0.38vw) 0 #d0b07c; /* 95% */
+            font-size: clamp(0.95rem, 3.8vw, 1.14rem); /* 95% */
+        }
+
+        /* POWER INDICATOR - 5% LEBIH KECIL */
+        .power-indicator {
+            position: relative;
+            width: min(45.6px, 9.5vw); /* 95% */
+            height: min(45.6px, 9.5vw); /* 95% */
+            min-width: 38px;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffd966;
+            border-radius: 50%;
+            border: min(3.8px, 0.76vw) solid white; /* 95% */
+            box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(14px, 2.85vw) rgba(255, 215, 0, 0.5); /* 95% */
+            transition: all 0.3s ease;
+            animation: pulseGlow 2s infinite;
+        }
+        
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(9.5px, 1.9vw) rgba(255, 255, 255, 0.5); } /* 95% */
+            50% { box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(19px, 3.8vw) rgba(255, 215, 0, 0.8); } /* 95% */
+            100% { box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(9.5px, 1.9vw) rgba(255, 255, 255, 0.5); } /* 95% */
+        }
+        
+        .power-indicator.active-2x {
+            background: linear-gradient(145deg, #ffd700, #ffb347);
+            animation: pulseGold 1.5s infinite;
+        }
+        
+        .power-indicator.active-shield {
+            background: linear-gradient(145deg, #87ceeb, #4682b4);
+            animation: pulseBlue 1.5s infinite;
+        }
+        
+        .power-indicator.active-shoot {
+            background: linear-gradient(145deg, #ff6b6b, #ff4757);
+            animation: pulseRed 1.5s infinite;
+        }
+        
+        @keyframes pulseGold {
+            0% { box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(14px, 2.85vw) #ffd700; } /* 95% */
+            50% { box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(28px, 5.7vw) #ffd700, 0 0 min(42px, 8.55vw) #ffa500; } /* 95% */
+            100% { box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(14px, 2.85vw) #ffd700; } /* 95% */
+        }
+        
+        @keyframes pulseBlue {
+            0% { box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(14px, 2.85vw) #87ceeb; } /* 95% */
+            50% { box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(28px, 5.7vw) #87ceeb, 0 0 min(42px, 8.55vw) #4169e1; } /* 95% */
+            100% { box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(14px, 2.85vw) #87ceeb; } /* 95% */
+        }
+        
+        @keyframes pulseRed {
+            0% { box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(14px, 2.85vw) #ff6b6b; } /* 95% */
+            50% { box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(28px, 5.7vw) #ff6b6b, 0 0 min(42px, 8.55vw) #ff0000; } /* 95% */
+            100% { box-shadow: 0 min(3.8px, 0.76vw) 0 #b45f2e, 0 0 min(14px, 2.85vw) #ff6b6b; } /* 95% */
+        }
+        
+        .power-emoji {
+            font-size: clamp(1.33rem, 4.75vw, 1.52rem); /* 95% */
+            line-height: 1;
+            z-index: 2;
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
+        }
+        
+        .power-progress {
+            position: absolute;
+            top: -5.7px;
+            left: -5.7px;
+            width: calc(100% + 11.4px);
+            height: calc(100% + 11.4px);
+            border-radius: 50%;
+            border: min(3.8px, 0.76vw) solid transparent;
+            border-top-color: white;
+            border-right-color: rgba(255,255,255,0.7);
+            border-bottom-color: rgba(255,255,255,0.4);
+            border-left-color: rgba(255,255,255,0.2);
+            transform: rotate(0deg);
+            animation: rotate 2s linear infinite;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .power-progress.active {
+            opacity: 1;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        #powerTimerText {
+            position: absolute;
+            bottom: -19px;
+            font-size: clamp(0.76rem, 2.85vw, 0.86rem); /* 95% */
+            font-weight: 700;
+            background: white;
+            padding: min(1.9px, 0.38vw) min(5.7px, 0.95vw); /* 95% */
+            border-radius: 30px;
+            min-width: min(26.6px, 6.65vw); /* 95% */
+            text-align: center;
+            border: min(1.9px, 0.38vw) solid #ff9472; /* 95% */
+            color: #4d2b13;
+            box-shadow: 0 min(1.9px, 0.38vw) 0 #b45f2e; /* 95% */
+            z-index: 3;
+        }
+
+        /* GAME OVER OVERLAY - 5% LEBIH KECIL */
+        .gameover-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            border-radius: min(76px, 11.4vw); /* 95% */
+            padding: min(28.5px, 4.75vw) min(38px, 5.7vw); /* 95% */
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: min(19px, 2.85vw); /* 95% */
+            z-index: 200;
+            border: min(7.6px, 1.43vw) solid #ff6f42; /* 95% */
+            box-shadow: 0 min(19px, 2.85vw) 0 #b15533; /* 95% */
+            width: min(266px, 76%); /* 95% */
+            text-align: center;
+        }
+        .gameover-overlay.show {
+            display: flex;
+        }
+        .gameover-text {
+            font-size: clamp(2.38rem, 9.5vw, 2.85rem); /* 95% */
+            filter: drop-shadow(4px 4px 0 #b15533);
+        }
+        .gameover-message {
+            font-size: clamp(1.43rem, 5.7vw, 1.9rem); /* 95% */
+            color: white;
+            font-weight: 700;
+            background: #ff9472;
+            padding: min(9.5px, 1.9vw) min(19px, 2.85vw); /* 95% */
+            border-radius: 40px;
+            border: min(3.8px, 0.76vw) solid white; /* 95% */
+        }
+        #playAgainBtn {
+            background: #faca15;
+            border: none;
+            border-radius: 60px;
+            padding: min(14px, 2.38vw) min(28.5px, 4.75vw); /* 95% */
+            font-size: clamp(1.43rem, 5.7vw, 1.9rem); /* 95% */
+            font-weight: 700;
+            color: #4d2b13;
+            border: min(4.75px, 0.95vw) solid white; /* 95% */
+            box-shadow: 0 min(7.6px, 1.43vw) 0 #b47d2e; /* 95% */
+            cursor: pointer;
+            transition: transform 0.05s ease;
+            display: flex;
+            align-items: center;
+            gap: min(14px, 2.38vw); /* 95% */
+        }
+        #playAgainBtn:active {
+            transform: translateY(min(7.6px, 1.43vw)); /* 95% */
+            box-shadow: 0 min(1.9px, 0.38vw) 0 #b47d2e; /* 95% */
+        }
+
+        /* ===== PC 800x600 VERSION - 40% LEBIH KECIL ===== */
+        @media screen and (min-width: 769px) {
+            .game-wrapper {
+                padding: 10.8px 7.2px 15px; /* 60% dari asal (18/12/25) */
+                border-radius: 48px 48px 30px 30px; /* 60% */
+                box-shadow: 0 12px 0 #b85b2a, 0 18px 18px rgba(0,0,0,0.25); /* 60% */
+                border: 3.6px solid #ffe9a7; /* 60% */
+            }
+            
+            .header-container {
+                gap: 6px;
+                margin: 0 9px 9px;
+            }
+            
+            .tap-container {
+                padding: 4.8px 12px; /* 60% */
+                border: 2.4px solid #ff9472; /* 60% */
+                box-shadow: 0 3.6px 0 #b15533; /* 60% */
+                min-height: 30px; /* 60% */
+            }
+            .tap-container:active {
+                transform: translateY(2.4px);
+                box-shadow: 0 1.2px 0 #b15533;
+            }
+            
+            .tap-left {
+                gap: 4.8px;
+            }
+            
+            .tap-emoji {
+                font-size: 1.2rem; /* 60% dari 2rem */
+            }
+            
+            #tapText {
+                font-size: 0.9rem; /* 60% dari 1.5rem */
+            }
+            
+            .controls-container {
+                gap: 4.8px;
+                padding: 4.8px 9px; /* 60% */
+                border: 2.4px solid white;
+                box-shadow: 0 3.6px 0 #b45f2e;
+            }
+            
+            .control-btn {
+                font-size: 1.2rem; /* 60% */
+                padding: 0 4.8px;
+                filter: drop-shadow(1.2px 1.2px 0 #b45f2e);
+            }
+            .control-btn:active {
+                transform: translateY(2.4px);
+            }
+            
+            /* CANVAS 40% LEBIH KECIL - 270x390 (dari 450x650) */
+            canvas {
+                width: 270px;
+                height: 390px;
+                max-height: none;
+                aspect-ratio: auto;
+                border-radius: 30px; /* 60% */
+                box-shadow: inset 0 0 0 4.8px #fec37f, 0 7.2px 0 #9f4d26; /* 60% */
+            }
+            
+            .stats-panel {
+                padding: 4.8px 12px; /* 60% */
+                margin: 9px 9px 0;
+                border-radius: 42px; /* 60% */
+                border: 2.4px solid #ffa56e;
+                box-shadow: inset 0 -2.4px 0 #c06737, 0 6px 0 #a05028; /* 60% */
+                font-size: 0.9rem; /* 60% */
+                min-height: 36px;
+                gap: 6px;
+            }
+            
+            .candy-box {
+                gap: 4.8px;
+                padding: 3.6px 12px; /* 60% */
+                border: 2.4px solid #ffad5a;
+                box-shadow: 0 2.4px 0 #b45f2e;
+            }
+            .candy-box span {
+                font-size: 1.08rem; /* 60% */
+            }
+
+            .best-box {
+                gap: 3px;
+                padding: 3.6px 12px; /* 60% */
+                border: 2.4px solid #ff8a5c;
+                box-shadow: 0 2.4px 0 #b45f2e;
+            }
+            .best-box span {
+                font-size: 1.08rem; /* 60% */
+            }
+            #bestScoreDisplay {
+                border-radius: 30px;
+                padding: 1.2px 7.2px; /* 60% */
+                min-width: 30px;
+                box-shadow: inset 0 -1.2px 0 #d0b07c;
+                font-size: 0.72rem; /* 60% */
+            }
+
+            /* POWER INDICATOR - 40% LEBIH KECIL */
+            .power-indicator {
+                width: 28.8px; /* 60% dari 48px */
+                height: 28.8px;
+                min-width: 28.8px;
+                min-height: 28.8px;
+                border: 2.4px solid white;
+                box-shadow: 0 2.4px 0 #b45f2e, 0 0 9px rgba(255, 215, 0, 0.5);
+            }
+            
+            @keyframes pulseGlow {
+                0% { box-shadow: 0 2.4px 0 #b45f2e, 0 0 6px rgba(255, 255, 255, 0.5); }
+                50% { box-shadow: 0 2.4px 0 #b45f2e, 0 0 12px rgba(255, 215, 0, 0.8); }
+                100% { box-shadow: 0 2.4px 0 #b45f2e, 0 0 6px rgba(255, 255, 255, 0.5); }
+            }
+            
+            @keyframes pulseGold {
+                0% { box-shadow: 0 2.4px 0 #b45f2e, 0 0 9px #ffd700; }
+                50% { box-shadow: 0 2.4px 0 #b45f2e, 0 0 18px #ffd700, 0 0 27px #ffa500; }
+                100% { box-shadow: 0 2.4px 0 #b45f2e, 0 0 9px #ffd700; }
+            }
+            
+            @keyframes pulseBlue {
+                0% { box-shadow: 0 2.4px 0 #b45f2e, 0 0 9px #87ceeb; }
+                50% { box-shadow: 0 2.4px 0 #b45f2e, 0 0 18px #87ceeb, 0 0 27px #4169e1; }
+                100% { box-shadow: 0 2.4px 0 #b45f2e, 0 0 9px #87ceeb; }
+            }
+            
+            @keyframes pulseRed {
+                0% { box-shadow: 0 2.4px 0 #b45f2e, 0 0 9px #ff6b6b; }
+                50% { box-shadow: 0 2.4px 0 #b45f2e, 0 0 18px #ff6b6b, 0 0 27px #ff0000; }
+                100% { box-shadow: 0 2.4px 0 #b45f2e, 0 0 9px #ff6b6b; }
+            }
+            
+            .power-emoji {
+                font-size: 0.96rem; /* 60% */
+            }
+            
+            .power-progress {
+                top: -3.6px;
+                left: -3.6px;
+                width: calc(100% + 7.2px);
+                height: calc(100% + 7.2px);
+                border: 2.4px solid transparent;
+                border-top-color: white;
+                border-right-color: rgba(255,255,255,0.7);
+                border-bottom-color: rgba(255,255,255,0.4);
+                border-left-color: rgba(255,255,255,0.2);
+            }
+            
+            #powerTimerText {
+                bottom: -12px;
+                font-size: 0.54rem;
+                padding: 1.2px 3.6px;
+                border-radius: 30px;
+                min-width: 18px;
+                border: 1.2px solid #ff9472;
+                box-shadow: 0 1.2px 0 #b45f2e;
+            }
+
+            /* GAME OVER OVERLAY - 40% LEBIH KECIL */
+            .gameover-overlay {
+                border-radius: 48px; /* 60% */
+                padding: 18px 24px; /* 60% */
+                gap: 12px;
+                border: 4.8px solid #ff6f42; /* 60% */
+                box-shadow: 0 12px 0 #b15533;
+                width: 168px; /* 60% */
+            }
+            .gameover-text {
+                font-size: 1.8rem; /* 60% */
+            }
+            .gameover-message {
+                font-size: 1.2rem; /* 60% */
+                padding: 6px 12px;
+                border: 2.4px solid white;
+            }
+            #playAgainBtn {
+                border-radius: 60px;
+                padding: 9px 18px; /* 60% */
+                font-size: 1.2rem; /* 60% */
+                border: 3px solid white;
+                box-shadow: 0 4.8px 0 #b47d2e; /* 60% */
+                gap: 9px;
+            }
+            #playAgainBtn:active {
+                transform: translateY(4.8px);
+                box-shadow: 0 1.2px 0 #b47d2e;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- LOADING PAGE -->
+    <div class="loading-page" id="loadingPage">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjCtDCTczMYvFiH4DvV8xMnWfnoqZpA0edjiCF2SNTKHvkBlPbsC1xjuZft7G0bPK0YdTLpDkjdd7OnPGftYgOmpESpDerWlN5befOdfG_cwhb-2X2VdXStWdIvEAByiSKPXuj-kbG3xeeEbXc4TRpmq8SxWULp2VrGL-VOyYOoowqOrK01j7a9711ZMQM/s1600/1000169272.jpg" 
+             alt="Loading Image" 
+             class="loading-image"
+             onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiMyMjIiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiNmZmZmZmYiPkxPQURJTkc8L3RleHQ+PC9zdmc+';">
+        <div class="loading-subtext">
+            ✨ LOADING GAME ✨
+        </div>
+    </div>
+
+    <!-- GAME WRAPPER -->
+    <div class="game-wrapper" id="gameWrapper">
+        <div class="header-container">
+            <div class="tap-container" id="tapContainer">
+                <div class="tap-left">
+                    <span class="tap-emoji">👇</span>
+                    <span id="tapText">tap here</span>
+                </div>
+            </div>
+            
+            <div class="controls-container">
+                <button class="control-btn" id="pauseBtn" title="Pause">⏸️</button>
+                <button class="control-btn" id="soundBtn" title="Sound">🔊</button>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="450" height="650"></canvas>
+
+        <div class="stats-panel">
+            <div style="display: flex; align-items: center; gap: 5px;">🍭 <span id="scoreDisplay">0</span></div>
+            
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="best-box">
+                    <span>🏆</span> <span id="bestScoreDisplay">0</span>
+                </div>
+                
+                <div class="power-indicator" id="powerIndicator">
+                    <span class="power-emoji" id="powerEmoji">⚡</span>
+                    <div class="power-progress" id="powerProgress"></div>
+                    <span id="powerTimerText">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="gameover-overlay" id="gameoverOverlay">
+            <div class="gameover-text">💀👾💀</div>
+            <div class="gameover-message">GAME OVER</div>
+            <button id="playAgainBtn"><span>🔄</span> PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <!-- GAME SCRIPT UTAMA -->
+    <script>
+        (function() {
+            // Loading page elements
+            const loadingPage = document.getElementById('loadingPage');
+            const gameWrapper = document.getElementById('gameWrapper');
+            
+            // Game elements
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const scoreSpan = document.getElementById('scoreDisplay');
+            const bestScoreSpan = document.getElementById('bestScoreDisplay');
+            const tapContainer = document.getElementById('tapContainer');
+            const tapText = document.getElementById('tapText');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const soundBtn = document.getElementById('soundBtn');
+            const gameoverOverlay = document.getElementById('gameoverOverlay');
+            const playAgainBtn = document.getElementById('playAgainBtn');
+            
+            // Power indicator elements
+            const powerIndicator = document.getElementById('powerIndicator');
+            const powerEmoji = document.getElementById('powerEmoji');
+            const powerTimerText = document.getElementById('powerTimerText');
+            const powerProgress = document.getElementById('powerProgress');
+
+            // STORAGE KEYS
+            const STORAGE_KEY = 'plinkoKidsScore';
+            const BEST_KEY = 'plinkoKidsBest';
+
+            // CONFIG
+            const CONFIG = {
+                gravity: 0.2,
+                friction: 0.5,
+                rows: 10,
+                cols: 9,
+                pegRadius: 7,
+                chipRadius: 11,
+                monsterRadius: 20,
+                monsterSpeed: 0.18,
+                powerUpDuration: 15,
+                monsterDestroyDuration: 5,
+                slots: [
+                    { color: '#ffa5a5', val: 10, emoji: '🍎' },
+                    { color: '#ffc896', val: 20, emoji: '🍊' },
+                    { color: '#fafa9b', val: 50, emoji: '🍋' },
+                    { color: '#b8e0b8', val: 20, emoji: '🍏' },
+                    { color: '#b1d1fc', val: 10, emoji: '🫐' }
+                ]
+            };
+            const SLOT_COUNT = 5;
+            const SLOT_WIDTH = canvas.width / SLOT_COUNT;
+
+            // Game state
+            let score = 0;
+            let bestScore = 0;
+            let gameActive = true;
+            let gamePaused = false;
+            let soundEnabled = true;
+            
+            // Power up state
+            let activePowerUps = {
+                '2x': false,
+                'shield': false,
+                'shoot': false
+            };
+            let powerUpTimer = null;
+            let powerUpStartTime = 0;
+            let powerUps = [];
+            
+            // Monster destroyed state
+            let monsterDestroyed = false;
+            let monsterDestroyTimer = null;
+            
+            // Load saved scores
+            try {
+                const savedScore = localStorage.getItem(STORAGE_KEY);
+                if (savedScore !== null) score = parseInt(savedScore, 10) || 0;
+                
+                const savedBest = localStorage.getItem(BEST_KEY);
+                if (savedBest !== null) bestScore = parseInt(savedBest, 10) || 0;
+                else bestScore = score;
+            } catch (e) { console.log('localStorage error'); }
+
+            bestScore = Math.max(bestScore, score);
+            
+            let balloons = [];
+            let particles = [];
+            let pegs = [];            
+
+            // ========== SOUND EFFECTS ==========
+            let audioCtx = null;
+
+            function initAudio() {
+                if (audioCtx) return;
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch(e) {
+                    console.log('Web Audio API not supported');
+                }
+            }
+
+            function playSound(type) {
+                if (!soundEnabled || !audioCtx) return;
+                
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().then(() => {
+                        actuallyPlaySound(type);
+                    }).catch(() => {});
+                } else {
+                    actuallyPlaySound(type);
+                }
+            }
+
+            function actuallyPlaySound(type) {
+                if (!audioCtx) return;
+                
+                try {
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+                    
+                    osc.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    
+                    switch(type) {
+                        case 'drop':
+                            osc.frequency.setValueAtTime(400, now);
+                            osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+                            gainNode.gain.setValueAtTime(0.1, now);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                            break;
+                        case 'peg':
+                            osc.frequency.setValueAtTime(800, now);
+                            osc.frequency.exponentialRampToValueAtTime(500, now + 0.1);
+                            gainNode.gain.setValueAtTime(0.08, now);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                            break;
+                        case 'score':
+                            osc.frequency.setValueAtTime(600, now);
+                            osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                            gainNode.gain.setValueAtTime(0.15, now);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                            break;
+                        case 'monster':
+                            osc.frequency.setValueAtTime(150, now);
+                            osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+                            gainNode.gain.setValueAtTime(0.2, now);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                            break;
+                        case 'powerup':
+                            osc.frequency.setValueAtTime(900, now);
+                            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
+                            gainNode.gain.setValueAtTime(0.15, now);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                            break;
+                        case 'destroy':
+                            osc.frequency.setValueAtTime(200, now);
+                            osc.frequency.exponentialRampToValueAtTime(400, now + 0.3);
+                            gainNode.gain.setValueAtTime(0.25, now);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                            break;
+                        default: break;
+                    }
+                    
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } catch (e) {
+                    console.log('Sound error:', e);
+                }
+            }
+
+            function enableAudio() {
+                initAudio();
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {});
+                }
+            }
+
+            // ========== POWER UP SYSTEM ==========
+            class PowerUp {
+                constructor(type) {
+                    this.type = type;
+                    this.respawn();
+                }
+                
+                respawn() {
+                    this.x = 40 + Math.random() * (canvas.width - 80);
+                    this.y = 80 + Math.random() * (canvas.height - 200);
+                    this.radius = 15;
+                    
+                    switch(this.type) {
+                        case '2x': 
+                            this.color = '#ffd700'; 
+                            this.emoji = '2️⃣'; 
+                            break;
+                        case 'shield': 
+                            this.color = '#87ceeb'; 
+                            this.emoji = '🛡️'; 
+                            break;
+                        case 'shoot': 
+                            this.color = '#ff6b6b'; 
+                            this.emoji = '🔫'; 
+                            break;
+                    }
+                    
+                    this.active = true;
+                }
+                
+                draw() {
+                    if (!this.active) return;
+                    
+                    ctx.save();
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = this.color;
+                    
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    
+                    ctx.shadowBlur = 30;
+                    ctx.globalAlpha = 0.5 + Math.sin(Date.now() * 0.01) * 0.2;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius + 3, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    ctx.shadowBlur = 0;
+                    ctx.globalAlpha = 1;
+                    ctx.font = '20px "Quicksand", sans-serif';
+                    ctx.fillStyle = 'white';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(this.emoji, this.x, this.y);
+                    
+                    ctx.restore();
+                }
+                
+                checkCollision(balloon) {
+                    if (!this.active) return false;
+                    
+                    let dx = balloon.x - this.x;
+                    let dy = balloon.y - this.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    return dist < balloon.radius + this.radius;
+                }
+            }
+
+            // Create 3 power-ups
+            powerUps.push(new PowerUp('2x'));
+            powerUps.push(new PowerUp('shield'));
+            powerUps.push(new PowerUp('shoot'));
+
+            // Fungsi untuk memperbarui indikator power-up
+            function updatePowerIndicator() {
+                powerIndicator.classList.remove('active-2x', 'active-shield', 'active-shoot');
+                
+                if (activePowerUps['2x'] || activePowerUps['shield'] || activePowerUps['shoot']) {
+                    if (activePowerUps['2x']) {
+                        powerEmoji.textContent = '2️⃣';
+                        powerIndicator.classList.add('active-2x');
+                    } else if (activePowerUps['shield']) {
+                        powerEmoji.textContent = '🛡️';
+                        powerIndicator.classList.add('active-shield');
+                    } else if (activePowerUps['shoot']) {
+                        powerEmoji.textContent = '🔫';
+                        powerIndicator.classList.add('active-shoot');
+                    }
+                    
+                    powerProgress.classList.add('active');
+                    
+                    let elapsed = (Date.now() - powerUpStartTime) / 1000;
+                    let remaining = Math.max(0, CONFIG.powerUpDuration - elapsed);
+                    powerTimerText.textContent = Math.ceil(remaining);
+                } else {
+                    powerEmoji.textContent = '⚡';
+                    powerTimerText.textContent = '0';
+                    powerProgress.classList.remove('active');
+                }
+            }
+
+            function activatePowerUp(type) {
+                activePowerUps[type] = true;
+                powerUpStartTime = Date.now();
+                
+                if (powerUpTimer) {
+                    clearTimeout(powerUpTimer);
+                }
+                
+                powerUpTimer = setTimeout(() => {
+                    activePowerUps = {
+                        '2x': false,
+                        'shield': false,
+                        'shoot': false
+                    };
+                    powerUpTimer = null;
+                    updatePowerIndicator();
+                }, CONFIG.powerUpDuration * 1000);
+                
+                playSound('powerup');
+                updatePowerIndicator();
+            }
+            
+            // ========== MONSTER DESTROY FUNCTION ==========
+            function destroyMonster() {
+                if (monsterDestroyed) return;
+                
+                monsterDestroyed = true;
+                playSound('destroy');
+                
+                for (let i=0; i<30; i++) {
+                    particles.push(new Particle(monster.x, monster.y, '#ff6b6b'));
+                }
+                
+                if (monsterDestroyTimer) {
+                    clearTimeout(monsterDestroyTimer);
+                }
+                
+                monsterDestroyTimer = setTimeout(() => {
+                    monsterDestroyed = false;
+                    monster.x = canvas.width / 2;
+                    monster.y = canvas.height - 100;
+                    
+                    for (let i=0; i<20; i++) {
+                        particles.push(new Particle(monster.x, monster.y, '#9b59b6'));
+                    }
+                }, 5000);
+            }
+
+            // ========== MONSTER ==========
+            let monster = {
+                x: canvas.width / 2,
+                y: canvas.height - 100,
+                radius: CONFIG.monsterRadius,
+                color: '#9b59b6',
+                eyeColor: 'white',
+                pupilColor: '#2c3e50',
+                speed: CONFIG.monsterSpeed,
+                legOffset: 0,
+            };
+
+            // ========== PEGS ==========
+            const startY = 80;            
+            const rowSpacing = 48;
+            const leftMargin = 38;
+            const rightMargin = 38;      
+            const availableWidth = canvas.width - leftMargin - rightMargin;
+            const colSpacing = availableWidth / (CONFIG.cols - 1);
+            
+            for (let r = 0; r < CONFIG.rows; r++) {
+                let offsetX = (r % 2 === 0) ? 0 : colSpacing / 2;
+                for (let c = 0; c < CONFIG.cols; c++) {
+                    let x = leftMargin + c * colSpacing + offsetX;
+                    const maxX = canvas.width - rightMargin;
+                    if (x > maxX) x = maxX;
+                    if (x < leftMargin) x = leftMargin;
+                    
+                    let hapus = false;
+                    if (r === 1 || r === 3 || r === 5 || r === 7 || r === 9) {
+                        if (c === CONFIG.cols - 1) hapus = true;
+                    }
+                    
+                    if (!hapus) {
+                        let y = startY + r * rowSpacing + (c % 2) * 1.5; 
+                        pegs.push({
+                            x: x, y: y,
+                            baseR: CONFIG.pegRadius,
+                            currentR: CONFIG.pegRadius,
+                            color: `hsl(${ (r * 35 + c * 25) % 360 }, 75%, 72%)`,
+                        });
+                    }
+                }
+            }
+
+            // ---------- PARTICLE ----------
+            class Particle {
+                constructor(x, y, baseColor) {
+                    this.x = x; this.y = y;
+                    this.vx = (Math.random() - 0.5) * 3;
+                    this.vy = (Math.random() - 0.8) * 3;
+                    this.life = 1.0;
+                    this.color = baseColor || '#ffdb8a';
+                    this.size = Math.random() * 5 + 2;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vy += 0.02;
+                    this.life -= 0.018;
+                }
+                draw() {
+                    ctx.globalAlpha = this.life;
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(this.x-2, this.y-2, this.size, this.size);
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            // ---------- BALLOON ----------
+            class Balloon {
+                constructor(x) {
+                    this.x = Math.min(Math.max(x, 30), canvas.width - 30);
+                    this.y = 30;
+                    this.vx = (Math.random() - 0.5) * 1.6;
+                    this.vy = 0.8;
+                    this.dead = false;
+                    this.radius = CONFIG.chipRadius;
+                    this.color = `hsl(${Math.random() * 360}, 80%, 70%)`;
+                    this.tail = [];
+                    this.stuckCounter = 0;
+                    this.lastY = this.y;
+                    this.lastPegHitTime = 0;
+                }
+
+                update() {
+                    if (!gameActive || gamePaused) return;
+                    
+                    this.tail.push({x: this.x, y: this.y});
+                    if (this.tail.length > 5) this.tail.shift();
+                    this.lastY = this.y;
+
+                    this.vy += CONFIG.gravity;
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Left wall
+                    if (this.x < 15 + this.radius) {
+                        this.x = 15 + this.radius;
+                        this.vx *= -CONFIG.friction;
+                        for (let i=0; i<2; i++) particles.push(new Particle(this.x, this.y, '#ffdb8a'));
+                    }
+                    // Right wall
+                    if (this.x > canvas.width - 15 - this.radius) {
+                        this.x = canvas.width - 15 - this.radius;
+                        this.vx *= -CONFIG.friction;
+                        for (let i=0; i<2; i++) particles.push(new Particle(this.x, this.y, '#ffdb8a'));
+                    }
+
+                    // Peg collisions
+                    pegs.forEach(p => {
+                        let dx = this.x - p.x;
+                        let dy = this.y - p.y;
+                        let dist = Math.sqrt(dx*dx + dy*dy);
+                        let minDist = this.radius + p.currentR;
+                        if (dist < minDist) {
+                            p.currentR = p.baseR * 2.0;
+                            let angle = Math.atan2(dy, dx);
+                            let overlap = minDist - dist;
+                            this.x += Math.cos(angle) * overlap * 0.8;
+                            this.y += Math.sin(angle) * overlap * 0.8;
+                            this.vx += Math.cos(angle) * 3.0;
+                            this.vy += Math.sin(angle) * 3.0;
+                            this.vx *= 0.75;
+                            this.vy *= 0.75;
+                            for (let i=0; i<3; i++) particles.push(new Particle(p.x, p.y, p.color));
+                            
+                            let now = Date.now();
+                            if (now - this.lastPegHitTime > 100) {
+                                if (soundEnabled) playSound('peg');
+                                this.lastPegHitTime = now;
+                            }
+                        }
+                    });
+
+                    // Power-up collisions
+                    powerUps.forEach(p => {
+                        if (p.active && p.checkCollision(this)) {
+                            p.active = false;
+                            activatePowerUp(p.type);
+                            
+                            setTimeout(() => {
+                                p.respawn();
+                            }, 500);
+                            
+                            for (let i=0; i<10; i++) {
+                                particles.push(new Particle(p.x, p.y, p.color));
+                            }
+                        }
+                    });
+
+                    // Monster collision
+                    if (!monsterDestroyed) {
+                        let dx = this.x - monster.x;
+                        let dy = this.y - monster.y;
+                        let dist = Math.sqrt(dx*dx + dy*dy);
+                        
+                        if (dist < this.radius + monster.radius) {
+                            if (activePowerUps['shield']) {
+                                let angle = Math.atan2(dy, dx);
+                                this.x += Math.cos(angle) * 20;
+                                this.y += Math.sin(angle) * 20;
+                                monster.x -= Math.cos(angle) * 15;
+                                monster.y -= Math.sin(angle) * 15;
+                                
+                                for (let i=0; i<10; i++) {
+                                    particles.push(new Particle(this.x, this.y, '#87ceeb'));
+                                }
+                            } else {
+                                this.dead = true;
+                                if (soundEnabled) playSound('monster');
+                                
+                                score = 0;
+                                scoreSpan.innerText = score;
+                                
+                                try {
+                                    localStorage.setItem(STORAGE_KEY, '0');
+                                } catch (e) {}
+                                
+                                gameActive = false;
+                                gameoverOverlay.classList.add('show');
+                                return;
+                            }
+                        }
+                    }
+
+                    // SHOOT power-up
+                    if (activePowerUps['shoot'] && !monsterDestroyed) {
+                        let dx = this.x - monster.x;
+                        let dy = this.y - monster.y;
+                        let dist = Math.sqrt(dx*dx + dy*dy);
+                        
+                        if (dist < 150) {
+                            ctx.save();
+                            ctx.strokeStyle = '#ff6b6b';
+                            ctx.lineWidth = 3;
+                            ctx.shadowBlur = 10;
+                            ctx.shadowColor = '#ff0000';
+                            ctx.beginPath();
+                            ctx.moveTo(this.x, this.y);
+                            ctx.lineTo(monster.x, monster.y);
+                            ctx.stroke();
+                            ctx.restore();
+                            
+                            destroyMonster();
+                            
+                            for (let i=0; i<10; i++) {
+                                let p = new Particle(monster.x, monster.y, '#ff6b6b');
+                                p.vx = (Math.random() - 0.5) * 5;
+                                p.vy = (Math.random() - 0.5) * 5;
+                                particles.push(p);
+                            }
+                        }
+                    }
+
+                    // Bottom scoring
+                    if (this.y > canvas.height - 50) {
+                        this.dead = true;
+                        let slotIndex = Math.floor(this.x / SLOT_WIDTH);
+                        if (slotIndex >= SLOT_COUNT) slotIndex = SLOT_COUNT - 1;
+                        if (slotIndex < 0) slotIndex = 0;
+                        let reward = CONFIG.slots[slotIndex].val;
+                        
+                        if (activePowerUps['2x']) {
+                            reward *= 2;
+                        }
+                        
+                        score += reward;
+                        scoreSpan.innerText = score;
+                        if (soundEnabled) playSound('score');
+
+                        try {
+                            localStorage.setItem(STORAGE_KEY, score.toString());
+                            if (score > bestScore) {
+                                bestScore = score;
+                                localStorage.setItem(BEST_KEY, bestScore.toString());
+                                bestScoreSpan.innerText = bestScore;
+                            } else {
+                                localStorage.setItem(BEST_KEY, bestScore.toString());
+                            }
+                        } catch (e) {}
+
+                        for (let i=0; i<14; i++) {
+                            particles.push(new Particle(this.x, canvas.height-40, '#ffe087'));
+                        }
+
+                        tapText.innerText = 'tap here';
+                    }
+                }
+
+                draw() {
+                    for (let i=0; i<this.tail.length; i++) {
+                        ctx.globalAlpha = 0.3 * (i/this.tail.length);
+                        ctx.beginPath();
+                        ctx.arc(this.tail[i].x, this.tail[i].y, this.radius * 0.7, 0, Math.PI*2);
+                        ctx.fillStyle = this.color;
+                        ctx.fill();
+                    }
+                    ctx.globalAlpha = 1;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#ffb7c5';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x-3, this.y+10);
+                    ctx.lineTo(this.x, this.y+18);
+                    ctx.lineTo(this.x+3, this.y+10);
+                    ctx.fillStyle = '#b5845c';
+                    ctx.fill();
+                    ctx.fillStyle = '#1f2a36';
+                    ctx.beginPath();
+                    ctx.arc(this.x-4, this.y-3, 2, 0, Math.PI*2);
+                    ctx.arc(this.x+4, this.y-3, 2, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath();
+                    ctx.arc(this.x-5, this.y-5, 1, 0, Math.PI*2);
+                    ctx.arc(this.x+3, this.y-5, 1, 0, Math.PI*2);
+                    ctx.fill();
+                    
+                    let effectY = this.y - 25;
+                    if (activePowerUps['shield']) {
+                        ctx.save();
+                        ctx.strokeStyle = '#87ceeb';
+                        ctx.lineWidth = 3;
+                        ctx.shadowBlur = 20;
+                        ctx.shadowColor = '#87ceeb';
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.radius + 5, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                    if (activePowerUps['2x']) {
+                        ctx.save();
+                        ctx.fillStyle = '#ffd700';
+                        ctx.font = 'bold 16px sans-serif';
+                        ctx.fillText('2x', this.x - 12, effectY);
+                        ctx.restore();
+                        effectY -= 20;
+                    }
+                    if (activePowerUps['shoot']) {
+                        ctx.save();
+                        ctx.fillStyle = '#ff6b6b';
+                        ctx.font = 'bold 16px sans-serif';
+                        ctx.fillText('🔫', this.x - 8, effectY);
+                        ctx.restore();
+                    }
+                }
+            }
+
+            // ---------- MONSTER UPDATE ----------
+            function updateMonster() {
+                if (!gameActive || gamePaused || monsterDestroyed) return;
+                
+                let nearestBalloon = null;
+                let minDist = Infinity;
+                
+                balloons.forEach(b => {
+                    if (!b.dead) {
+                        let dx = b.x - monster.x;
+                        let dy = b.y - monster.y;
+                        let dist = Math.sqrt(dx*dx + dy*dy);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            nearestBalloon = b;
+                        }
+                    }
+                });
+
+                if (nearestBalloon) {
+                    let dx = nearestBalloon.x - monster.x;
+                    let dy = nearestBalloon.y - monster.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (dist > 1) {
+                        let moveX = (dx / dist) * monster.speed;
+                        let moveY = (dy / dist) * monster.speed;
+                        monster.x += moveX;
+                        monster.y += moveY;
+                    }
+                } else {
+                    monster.x += (Math.random() - 0.5) * 0.1;
+                    monster.y += (Math.random() - 0.5) * 0.1;
+                }
+
+                monster.x = Math.max(monster.radius + 10, Math.min(canvas.width - monster.radius - 10, monster.x));
+                monster.y = Math.max(monster.radius + 10, Math.min(canvas.height - monster.radius - 10, monster.y));
+                monster.legOffset = (monster.legOffset + 0.1) % (Math.PI * 2);
+            }
+
+            // ---------- GAMBAR MONSTER ----------
+            function drawMonster() {
+                if (monsterDestroyed) return;
+                
+                ctx.save();
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#6c3483';
+                ctx.beginPath();
+                ctx.arc(monster.x, monster.y, monster.radius, 0, Math.PI * 2);
+                ctx.fillStyle = monster.color;
+                ctx.fill();
+                
+                ctx.shadowBlur = 5;
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(monster.x - 8, monster.y - 6, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(monster.x + 8, monster.y - 6, 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                let pupilOffsetX = 0, pupilOffsetY = 0;
+                if (balloons.length > 0 && !balloons[0].dead) {
+                    let dx = balloons[0].x - monster.x;
+                    let dy = balloons[0].y - monster.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist > 0) {
+                        pupilOffsetX = (dx / dist) * 3;
+                        pupilOffsetY = (dy / dist) * 3;
+                    }
+                }
+                
+                ctx.fillStyle = '#2c3e50';
+                ctx.beginPath();
+                ctx.arc(monster.x - 8 + pupilOffsetX, monster.y - 6 + pupilOffsetY, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(monster.x + 8 + pupilOffsetX, monster.y - 6 + pupilOffsetY, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(monster.x - 10, monster.y - 9, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(monster.x + 6, monster.y - 9, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.strokeStyle = '#4a235a';
+                ctx.lineWidth = 3;
+                ctx.arc(monster.x, monster.y + 4, 8, 0.1, Math.PI - 0.1);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#6c3483';
+                for (let i = -1; i <= 1; i+=2) {
+                    let legX = monster.x + i * 10;
+                    let legY = monster.y + monster.radius - 2;
+                    let legOffset = Math.sin(monster.legOffset + i) * 5;
+                    ctx.beginPath();
+                    ctx.ellipse(legX, legY + 5, 5, 8 + legOffset, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            // draw slots
+            function drawSlots() {
+                for (let i = 0; i < SLOT_COUNT; i++) {
+                    let slot = CONFIG.slots[i];
+                    let x = i * SLOT_WIDTH;
+                    ctx.fillStyle = slot.color;
+                    ctx.globalAlpha = 0.5;
+                    ctx.fillRect(x, canvas.height - 55, SLOT_WIDTH, 50);
+                    ctx.globalAlpha = 1;
+                    ctx.font = 'bold 26px "Quicksand", "Comic Neue", cursive';
+                    ctx.fillStyle = '#3a2009';
+                    ctx.fillText(slot.emoji, x + 18, canvas.height - 18);
+                    ctx.font = 'bold 20px "Quicksand", sans-serif';
+                    ctx.fillStyle = '#412d12';
+                    ctx.fillText(slot.val, x + SLOT_WIDTH - 38, canvas.height - 28);
+                }
+            }
+
+            // ----- main loop -----
+            function drawScene() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#fcf5e6';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                if (gameActive && !gamePaused) {
+                    updateMonster();
+                }
+
+                pegs.forEach(p => {
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(Date.now() * 0.002 + p.x * 0.005);
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#ffbb77';
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    for (let i=0; i<5; i++) {
+                        let angle = (i * 72) * Math.PI / 180;
+                        let sx = Math.cos(angle) * p.currentR * 1.3;
+                        let sy = Math.sin(angle) * p.currentR * 1.3;
+                        if (i===0) ctx.moveTo(sx, sy);
+                        else ctx.lineTo(sx, sy);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                    if (p.currentR > p.baseR) p.currentR -= 0.25;
+                });
+
+                drawSlots();
+                
+                powerUps.forEach(p => p.draw());
+                
+                drawMonster();
+
+                particles = particles.filter(p => p.life > 0.02);
+                particles.forEach(p => { p.update(); p.draw(); });
+
+                balloons = balloons.filter(b => !b.dead);
+                balloons.forEach(b => { b.update(); b.draw(); });
+
+                // Update power indicator setiap frame
+                updatePowerIndicator();
+
+                requestAnimationFrame(drawScene);
+            }
+
+            // ----- drop balloon -----
+            function dropBalloon(e) {
+                e.preventDefault();
+                if (!gameActive || gamePaused) return;
+                
+                enableAudio();
+                
+                let canvasX = 40 + Math.random() * (canvas.width - 80);
+                
+                if (balloons.length === 0) {
+                    balloons.push(new Balloon(canvasX));
+                    tapText.innerText = '🎈 fall';
+                    if (soundEnabled) playSound('drop');
+                } else {
+                    tapText.innerText = '⏳ wait';
+                    setTimeout(() => {
+                        if (balloons.length > 0) {
+                            tapText.innerText = '🎈 fall';
+                        } else {
+                            tapText.innerText = 'tap here';
+                        }
+                    }, 600);
+                }
+            }
+
+            function handleCanvasDrop(e) {
+                e.preventDefault();
+                if (!gameActive || gamePaused) return;
+                
+                enableAudio();
+                
+                let clientX;
+                if (e.touches) {
+                    clientX = e.touches[0].clientX;
+                } else {
+                    clientX = e.clientX;
+                }
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                let canvasX = (clientX - rect.left) * scaleX;
+                canvasX = Math.min(Math.max(canvasX, 30), canvas.width - 30);
+
+                if (balloons.length === 0) {
+                    balloons.push(new Balloon(canvasX));
+                    tapText.innerText = '🎈 fall';
+                    if (soundEnabled) playSound('drop');
+                } else {
+                    tapText.innerText = '⏳ wait';
+                    setTimeout(() => {
+                        if (balloons.length > 0) {
+                            tapText.innerText = '🎈 fall';
+                        } else {
+                            tapText.innerText = 'tap here';
+                        }
+                    }, 600);
+                }
+            }
+
+            // ----- GAME OVER / PLAY AGAIN -----
+            function resetGame() {
+                gameActive = true;
+                gamePaused = false;
+                pauseBtn.textContent = '⏸️';
+                gameoverOverlay.classList.remove('show');
+                balloons = [];
+                particles = [];
+                monster.x = canvas.width / 2;
+                monster.y = canvas.height - 100;
+                monsterDestroyed = false;
+                if (monsterDestroyTimer) {
+                    clearTimeout(monsterDestroyTimer);
+                    monsterDestroyTimer = null;
+                }
+                tapText.innerText = 'tap here';
+                
+                activePowerUps = {
+                    '2x': false,
+                    'shield': false,
+                    'shoot': false
+                };
+                if (powerUpTimer) {
+                    clearTimeout(powerUpTimer);
+                    powerUpTimer = null;
+                }
+                powerUps.forEach(p => p.respawn());
+                
+                updatePowerIndicator();
+            }
+
+            playAgainBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                resetGame();
+            });
+
+            // ----- PAUSE BUTTON -----
+            pauseBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!gameActive) return;
+                gamePaused = !gamePaused;
+                pauseBtn.textContent = gamePaused ? '▶️' : '⏸️';
+            });
+
+            // ----- SOUND BUTTON -----
+            soundBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                soundEnabled = !soundEnabled;
+                soundBtn.textContent = soundEnabled ? '🔊' : '🔇';
+                if (soundEnabled) {
+                    enableAudio();
+                }
+            });
+
+            // Event listeners
+            tapContainer.addEventListener('mousedown', dropBalloon);
+            tapContainer.addEventListener('touchstart', dropBalloon, { passive: false });
+            canvas.addEventListener('mousedown', handleCanvasDrop);
+            canvas.addEventListener('touchstart', handleCanvasDrop, { passive: false });
+
+            // Initial display
+            scoreSpan.innerText = score;
+            bestScoreSpan.innerText = bestScore;
+
+            // Expose game instance for SDK
+            window.gameInstance = {
+                handleSDKEvent: function(event) {
+                    switch (event.name) {
+                        case "SDK_GAME_PAUSE":
+                            if (gameActive) {
+                                gamePaused = true;
+                                pauseBtn.textContent = '▶️';
+                            }
+                            break;
+                        case "SDK_GAME_START":
+                            if (gameActive) {
+                                gamePaused = false;
+                                pauseBtn.textContent = '⏸️';
+                            }
+                            break;
+                    }
+                }
+            };
+
+            // Auto start game after 2 seconds
+            setTimeout(() => {
+                loadingPage.classList.add('hide');
+                gameWrapper.classList.add('show');
+                enableAudio();
+                drawScene();
+            }, 2000);
+        })();
+    </script>
+
+    <!-- GameMonetize SDK - SATU VERSI SAJA (SUDAH DIPERBAIKI) -->
+    <script type="text/javascript">
+        // SDK Options - HARUS didefinisikan SEBELUM sdk.js diload
+        window.SDK_OPTIONS = {
+            gameId: "cxavyada7bclzxtbjtroyfyo6vuwwwgc",
+            onEvent: function(event) {
+                console.log('SDK Event:', event.name);
+                
+                // Hubungkan dengan game instance yang sudah ada
+                if (window.gameInstance && typeof window.gameInstance.handleSDKEvent === 'function') {
+                    window.gameInstance.handleSDKEvent(event);
+                }
+                
+                // Handle events langsung juga untuk jaga-jaga
+                switch(event.name) {
+                    case "SDK_GAME_PAUSE":
+                        console.log('Game paused by SDK');
+                        break;
+                    case "SDK_GAME_START":
+                        console.log('Game started/resumed by SDK');
+                        break;
+                    case "SDK_READY":
+                        console.log('SDK is ready');
+                        // Tampilkan banner setelah SDK siap
+                        setTimeout(function() {
+                            if (typeof sdk !== 'undefined' && sdk.showBanner) {
+                                sdk.showBanner();
+                                console.log('Banner shown');
+                            }
+                        }, 1000);
+                        break;
+                }
+            }
+        };
+
+        // Load SDK script - hanya SEKALI
+        (function() {
+            try {
+                // Cek apakah sudah ada script dengan ID ini
+                if (!document.getElementById('gamemonetize-sdk')) {
+                    var script = document.createElement('script');
+                    script.id = "gamemonetize-sdk";
+                    script.src = "https://api.gamemonetize.com/sdk.js";
+                    script.async = true;
+                    script.onload = function() { 
+                        console.log('GameMonetize SDK loaded successfully');
+                        
+                        // Coba tampilkan banner setelah load
+                        setTimeout(function() {
+                            if (typeof sdk !== 'undefined' && sdk.showBanner) {
+                                sdk.showBanner();
+                                console.log('Banner shown after load');
+                            }
+                        }, 500);
+                    };
+                    script.onerror = function() { 
+                        console.warn('Failed to load GameMonetize SDK');
+                    };
+                    document.head.appendChild(script);
+                }
+            } catch (e) {
+                console.warn('SDK initialization error:', e);
+            }
+        })();
+    </script>
+</body>
+</html>
