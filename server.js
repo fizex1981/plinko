@@ -7,9 +7,14 @@ const { Server } = require("socket.io");
 
 let WebcastPushConnection = null;
 try {
-    ({ WebcastPushConnection } = require('tiktok-live-connector'));
+    const tiktok = require("tiktok-live-connector");
+    WebcastPushConnection =
+        tiktok.WebcastPushConnection ||
+        tiktok.default?.WebcastPushConnection ||
+        tiktok;
+    console.log("✅ TikTok connector loaded successfully");
 } catch (e) {
-    console.log('⚠️ TikTok connector not installed.');
+    console.error("❌ TikTok connector load failed:", e);
 }
 
 const app = express();
