@@ -6,12 +6,27 @@ const fetch = require("node-fetch");
 const { Server } = require("socket.io");
 
 let WebcastPushConnection = null;
+
 try {
     const tiktok = require("tiktok-live-connector");
-    console.log("TikTok exports:", Object.keys(tiktok));
-    WebcastPushConnection = tiktok.WebcastPushConnection;
+
+    console.log("TikTok exports sample:");
+    console.log(
+        Object.keys(tiktok).filter(x =>
+            x.toLowerCase().includes("connect")
+        )
+    );
+
+    console.log("Default export type:", typeof tiktok.default);
+
+    WebcastPushConnection =
+        tiktok.default?.WebcastPushConnection ||
+        tiktok.default ||
+        tiktok.WebcastPushConnection;
+
     console.log("Connector type:", typeof WebcastPushConnection);
     console.log("✅ TikTok connector loaded successfully");
+
 } catch (e) {
     console.error("❌ TikTok connector load failed:", e);
 }
