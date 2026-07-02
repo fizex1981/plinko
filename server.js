@@ -401,10 +401,15 @@ app.post('/admin/connect', async (req, res) => {
             tiktokConnection = null;
         }
         
-        tiktokConnection = new TikTokLiveConnection({
-            uniqueId: username,
-            enableExtendedGiftInfo: true
-        });
+        console.log("CONNECTING TO:", username);
+        console.log("TYPE:", typeof username);
+
+        tiktokConnection = new TikTokLiveConnection(
+            username,
+            {
+                enableExtendedGiftInfo: true
+            }
+        );
         
         const timeoutPromise = new Promise((_, reject) => {
             setTimeout(() => reject(new Error('Connection timeout')), 15000);
