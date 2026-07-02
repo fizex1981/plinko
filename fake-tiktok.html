@@ -1,0 +1,976 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0f172a;
+            color: #fff;
+            padding: 16px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 16px;
+            margin: 10px 0;
+            border: 1px solid #334155;
+        }
+        
+        .card h2 {
+            margin-bottom: 12px;
+            font-size: 18px;
+            color: #e2e8f0;
+        }
+        
+        .card h3 {
+            margin: 10px 0 8px 0;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            margin: 4px 0;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        input:focus, select:focus {
+            border-color: #6366f1;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px 12px;
+            margin: 4px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #fff;
+        }
+        
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        button:active {
+            transform: translateY(0px);
+        }
+        
+        .btn-primary {
+            background: #6366f1;
+        }
+        
+        .btn-primary:hover {
+            background: #4f46e5;
+        }
+        
+        .btn-success {
+            background: #22c55e;
+        }
+        
+        .btn-success:hover {
+            background: #16a34a;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+        }
+        
+        .btn-warning:hover {
+            background: #d97706;
+        }
+        
+        .btn-purple {
+            background: #8b5cf6;
+        }
+        
+        .btn-purple:hover {
+            background: #7c3aed;
+        }
+        
+        .btn-rose {
+            background: #f43f5e;
+        }
+        
+        .btn-rose:hover {
+            background: #e11d48;
+        }
+        
+        .btn-info {
+            background: #06b6d4;
+        }
+        
+        .btn-info:hover {
+            background: #0891b2;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #0f172a;
+            border-radius: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .status-dot.online {
+            background: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+        }
+        
+        .status-dot.offline {
+            background: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+        }
+        
+        .status-label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .badge {
+            background: #334155;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .gift-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+        
+        .gift-btn {
+            font-size: 20px;
+            padding: 12px;
+            background: #1e293b;
+            border: 1px solid #475569;
+        }
+        
+        .gift-btn:hover {
+            background: #334155;
+        }
+        
+        #viewer {
+            font-size: 13px;
+        }
+        
+        #viewer option {
+            padding: 4px;
+        }
+        
+        .log-area {
+            background: #0f172a;
+            padding: 10px;
+            border-radius: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+            font-size: 12px;
+            font-family: monospace;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+        
+        .log-area .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid #1e293b;
+        }
+        
+        .log-area .log-entry .time {
+            color: #475569;
+        }
+        
+        .log-area .log-entry .highlight {
+            color: #fbbf24;
+        }
+        
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 12px 0 6px 0;
+        }
+        
+        .inline-flex {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        
+        .inline-flex button {
+            flex: 1;
+        }
+        
+        .stat-box {
+            background: #0f172a;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-box .stat-icon {
+            font-size: 24px;
+        }
+        
+        .stat-box .stat-label {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+        
+        .stat-box .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .stat-box .stat-value.gold {
+            color: #ffd700;
+        }
+        
+        .stat-box .stat-value.green {
+            color: #22c55e;
+        }
+        
+        .stat-box .stat-value.pink {
+            color: #f472b6;
+        }
+        
+        .stat-box .stat-value.blue {
+            color: #60a5fa;
+        }
+        
+        .hs-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0f172a;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 6px;
+        }
+        
+        .hs-display .hs-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .hs-display .hs-avatar {
+            font-size: 32px;
+        }
+        
+        .hs-display .hs-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        
+        .hs-display .hs-score {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffd700;
+        }
+        
+        .hs-display .hs-label {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        
+        .gift-counts {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 6px;
+        }
+        
+        .gift-count-item {
+            background: #0f172a;
+            padding: 6px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .gift-count-item .gift-emoji {
+            font-size: 20px;
+        }
+        
+        .gift-count-item .gift-number {
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+        
+        /* Scrollbar styling */
+        .log-area::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .log-area::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        
+        .log-area::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .gift-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .status-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .gift-counts {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LOGIN SECTION -->
+        <div id="loginSection">
+            <div class="card">
+                <h2>🔐 Admin Login</h2>
+                <input id="passwordInput" type="password" placeholder="Enter password..." onkeydown="if(event.key==='Enter') login()">
+                <button class="btn-primary" onclick="login()">LOGIN</button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTROL PANEL -->
+        <div id="mainPanel" style="display:none;">
+            <!-- Status Bar -->
+            <div class="card" style="padding:12px 16px;">
+                <div class="status-bar">
+                    <div>
+                        <span class="status-dot" id="statusDot"></span>
+                        <span class="status-label" id="statusText">DISCONNECTED</span>
+                    </div>
+                    <div>
+                        <span class="badge" id="viewerCount">👥 0</span>
+                        <span class="badge" id="likeTarget">❤️ 100</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connection Control -->
+            <div class="card">
+                <h2>🔌 Connection</h2>
+                <div class="grid-2">
+                    <input id="usernameInput" value="ohmeowku" placeholder="TikTok username">
+                    <select id="modeSelect">
+                        <option value="offline">📡 OFFLINE</option>
+                        <option value="online">🌐 ONLINE</option>
+                    </select>
+                </div>
+                <div class="grid-2">
+                    <button class="btn-success" onclick="connect()">🔗 CONNECT</button>
+                    <button class="btn-danger" onclick="disconnect()">⛔ DISCONNECT</button>
+                </div>
+                <button class="btn-warning" onclick="location.reload()">🔄 REFRESH</button>
+                <button class="btn-danger" onclick="logout()" style="margin-top:4px;">🚪 LOGOUT</button>
+            </div>
+
+            <!-- Stats Display -->
+            <div class="card">
+                <h2>📊 Server Stats</h2>
+                <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <div class="stat-box">
+                        <div class="stat-icon">❤️</div>
+                        <div class="stat-label">Total Likes</div>
+                        <div class="stat-value pink" id="totalLikesDisplay">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">🎁</div>
+                        <div class="stat-label">Total Gifts</div>
+                        <div class="stat-value green" id="totalGiftsDisplay">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">🎮</div>
+                        <div class="stat-label">Games Played</div>
+                        <div class="stat-value blue" id="gamesPlayedDisplay">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gift Counts -->
+            <div class="card">
+                <h2>🎁 Gift Statistics</h2>
+                <div class="gift-counts">
+                    <div class="gift-count-item">
+                        <div class="gift-emoji">🌹</div>
+                        <div>Rose</div>
+                        <div class="gift-number" id="roseCountDisplay">0</div>
+                    </div>
+                    <div class="gift-count-item">
+                        <div class="gift-emoji">🍩</div>
+                        <div>Donut</div>
+                        <div class="gift-number" id="donutCountDisplay">0</div>
+                    </div>
+                    <div class="gift-count-item">
+                        <div class="gift-emoji">🥐</div>
+                        <div>Donat</div>
+                        <div class="gift-number" id="donatCountDisplay">0</div>
+                    </div>
+                    <div class="gift-count-item">
+                        <div class="gift-emoji">🫰</div>
+                        <div>Finger Heart</div>
+                        <div class="gift-number" id="fingerheartCountDisplay">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- High Score Display -->
+            <div class="card">
+                <h2>🏆 High Score 24H</h2>
+                <div class="hs-display">
+                    <div class="hs-left">
+                        <div class="hs-avatar" id="hsAvatar">😺</div>
+                        <div>
+                            <div class="hs-name" id="hsUsername">-</div>
+                            <div class="hs-label">Username</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="hs-score" id="hsScore">0</div>
+                        <div class="hs-label" style="text-align:right;">Score</div>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:#475569;margin-top:6px;text-align:center;">
+                    Updated: <span id="hsTimestamp">-</span>
+                </div>
+            </div>
+
+            <!-- Timer & Likes -->
+            <div class="card" style="padding:10px 14px;">
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between;">
+                    
+                    <!-- TIMER -->
+                    <div style="display:flex; align-items:center; gap:4px; background:#0f172a; padding:4px 10px; border-radius:8px; flex-wrap:wrap;">
+                        <span style="font-size:13px; font-weight:600; color:#94a3b8;">⏱️</span>
+                        
+                        <button class="btn-purple" onclick="setTimer(60)" style="padding:3px 10px; font-size:11px; width:auto; border-radius:6px;">1m</button>
+                        <button class="btn-purple" onclick="setTimer(300)" style="padding:3px 10px; font-size:11px; width:auto; border-radius:6px;">5m</button>
+                        <button class="btn-purple" onclick="setTimer(600)" style="padding:3px 10px; font-size:11px; width:auto; border-radius:6px;">10m</button>
+                        <button class="btn-purple" onclick="setTimer(900)" style="padding:3px 10px; font-size:11px; width:auto; border-radius:6px;">15m</button>
+                        
+                        <input id="customTimer" type="number" placeholder="sec" value="60" style="width:50px; padding:3px 4px; font-size:11px; border-radius:6px;">
+                        <button class="btn-purple" onclick="setTimer(parseInt(document.getElementById('customTimer').value) || 60)" style="padding:3px 8px; font-size:11px; width:auto; border-radius:6px;">SET</button>
+                    </div>
+
+                    <!-- LIKES -->
+                    <div style="display:flex; align-items:center; gap:4px; background:#0f172a; padding:4px 10px; border-radius:8px; flex-wrap:wrap;">
+                        <span style="font-size:13px; font-weight:600; color:#94a3b8;">❤️</span>
+                        
+                        <button class="btn-primary" onclick="sendLikes(100)" style="padding:3px 10px; font-size:11px; width:auto; border-radius:6px;">100</button>
+                        <button class="btn-primary" onclick="sendLikes(500)" style="padding:3px 10px; font-size:11px; width:auto; border-radius:6px;">500</button>
+                        <button class="btn-primary" onclick="sendLikes(1000)" style="padding:3px 10px; font-size:11px; width:auto; border-radius:6px;">1k</button>
+                        <button class="btn-primary" onclick="sendLikes(5000)" style="padding:3px 10px; font-size:11px; width:auto; border-radius:6px;">5k</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Viewers & Gifts -->
+            <div class="card">
+                <h2>👥 Viewers & Gifts</h2>
+                
+                <!-- Viewer Dropdown -->
+                <select id="viewerSelect">
+                    <option value="">Select a viewer...</option>
+                </select>
+                
+                <!-- Add Viewer -->
+                <div class="grid-2">
+                    <input id="customViewer" placeholder="Custom username..." value="viewer_1">
+                    <button class="btn-success" onclick="addViewer()">➕ ADD VIEWER</button>
+                </div>
+                
+                <!-- Gift Buttons -->
+                <div class="section-title">🎁 Send Gift to Selected Viewer</div>
+                <div class="gift-grid">
+                    <button class="gift-btn" onclick="sendGift('rose')" title="Rose - Shield +15s">🌹</button>
+                    <button class="gift-btn" onclick="sendGift('donut')" title="Donut - Shield +2 Games">🍩</button>
+                    <button class="gift-btn" onclick="sendGift('donat')" title="Donat - Shield +1 Game">🥐</button>
+                    <button class="gift-btn" onclick="sendGift('fingerheart')" title="Finger Heart - X2 Points +30s">🫰</button>
+                </div>
+                <div style="display:flex;gap:6px;font-size:11px;color:#94a3b8;justify-content:center;flex-wrap:wrap;">
+                    <span>🌹 Rose = Shield 15s</span>
+                    <span>🍩 Donut = Shield 2 Games</span>
+                    <span>🥐 Donat = Shield 1 Game</span>
+                    <span>🫰 X2 = 2x Points 30s</span>
+                </div>
+                
+                <!-- Delete Buttons -->
+                <div class="section-title">🗑️ Delete Viewers</div>
+                <div class="grid">
+                    <button class="btn-danger" onclick="deleteSelectedViewer()">🗑️ DELETE SEL.</button>
+                    <button class="btn-danger" onclick="deleteOldestViewers(10)">🗑️ -10</button>
+                    <button class="btn-danger" onclick="deleteOldestViewers(50)">🗑️ -50</button>
+                </div>
+                <button class="btn-danger" onclick="deleteAllViewers()" style="margin-top:4px;">💀 DELETE ALL VIEWERS</button>
+            </div>
+
+            <!-- Log Area -->
+            <div class="card">
+                <h2>📋 Activity Log</h2>
+                <div class="log-area" id="logArea">
+                    <div class="log-entry"><span class="time">[System]</span> Ready</div>
+                </div>
+                <button class="btn-primary" onclick="document.getElementById('logArea').innerHTML='<div class=log-entry><span class=time>[System]</span> Log cleared</div>'" style="margin-top:6px;padding:6px;font-size:12px;">🗑️ Clear Log</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // SOCKET & API HELPERS
+        // ============================================================
+        const socket = io();
+        
+        function post(endpoint, data = {}) {
+            return fetch('/admin' + endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(r => r.json());
+        }
+        
+        function get(endpoint) {
+            return fetch(endpoint).then(r => r.json());
+        }
+        
+        function log(message, type = 'info') {
+            const area = document.getElementById('logArea');
+            const time = new Date().toLocaleTimeString();
+            const colors = {
+                info: '#94a3b8',
+                success: '#22c55e',
+                error: '#ef4444',
+                gift: '#fbbf24',
+                viewer: '#60a5fa'
+            };
+            const color = colors[type] || colors.info;
+            area.innerHTML += `<div class="log-entry"><span class="time">[${time}]</span> <span style="color:${color}">${message}</span></div>`;
+            area.scrollTop = area.scrollHeight;
+        }
+        
+        // ============================================================
+        // LOAD INITIAL DATA
+        // ============================================================
+        function loadServerData() {
+            get('/api/data').then(data => {
+                if (data) {
+                    // Update stats
+                    if (data.stats) {
+                        document.getElementById('totalLikesDisplay').textContent = data.stats.totalLikes || 0;
+                        document.getElementById('totalGiftsDisplay').textContent = data.stats.totalGifts || 0;
+                        document.getElementById('gamesPlayedDisplay').textContent = data.stats.gamesPlayed || 0;
+                    }
+                    
+                    // Update gift counts
+                    if (data.giftCounts) {
+                        document.getElementById('roseCountDisplay').textContent = data.giftCounts.rose || 0;
+                        document.getElementById('donutCountDisplay').textContent = data.giftCounts.donut || 0;
+                        document.getElementById('donatCountDisplay').textContent = data.giftCounts.donat || 0;
+                        document.getElementById('fingerheartCountDisplay').textContent = data.giftCounts.fingerheart || 0;
+                    }
+                    
+                    // Update high score
+                    if (data.highScore) {
+                        document.getElementById('hsAvatar').textContent = data.highScore.avatar || '😺';
+                        document.getElementById('hsUsername').textContent = data.highScore.username || '-';
+                        document.getElementById('hsScore').textContent = data.highScore.score || 0;
+                        if (data.highScore.timestamp) {
+                            const d = new Date(data.highScore.timestamp);
+                            document.getElementById('hsTimestamp').textContent = d.toLocaleString();
+                        }
+                    }
+                }
+            }).catch(() => {
+                log('⚠️ Failed to load server data', 'error');
+            });
+        }
+        
+        // ============================================================
+        // LOGIN / LOGOUT
+        // ============================================================
+        function login() {
+            const pwd = document.getElementById('passwordInput').value;
+            post('/login', { password: pwd }).then(data => {
+                if (data.success) {
+                    localStorage.setItem('adminAuth', '1');
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('mainPanel').style.display = 'block';
+                    log('✅ Login successful', 'success');
+                    loadServerData();
+                } else {
+                    alert('❌ Wrong password!');
+                    log('❌ Login failed', 'error');
+                }
+            });
+        }
+        
+        function logout() {
+            localStorage.removeItem('adminAuth');
+            post('/logout');
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('mainPanel').style.display = 'none';
+            log('👋 Logged out', 'info');
+        }
+        
+        // Check if already logged in
+        if (localStorage.getItem('adminAuth')) {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('mainPanel').style.display = 'block';
+            log('🔐 Auto-login', 'success');
+            loadServerData();
+        }
+        
+        // ============================================================
+        // CONNECTION
+        // ============================================================
+        function connect() {
+            const username = document.getElementById('usernameInput').value.trim() || 'ohmeowku';
+            const mode = document.getElementById('modeSelect').value;
+            
+            post('/mode', { mode: mode }).then(() => {
+                post('/connect', { username: username }).then(data => {
+                    if (data.success) {
+                        log(`✅ Connected as ${username} (${mode})`, 'success');
+                    } else {
+                        log(`❌ Connection failed: ${data.error || 'Unknown error'}`, 'error');
+                    }
+                });
+            });
+        }
+        
+        function disconnect() {
+            post('/disconnect').then(() => {
+                log('⛔ Disconnected', 'info');
+            });
+        }
+        
+        // ============================================================
+        // LIKES
+        // ============================================================
+        function sendLikes(count) {
+            post('/likes', { count: count }).then(() => {
+                log(`❤️ Sent ${count} likes`, 'info');
+                loadServerData();
+            });
+        }
+        
+        // ============================================================
+        // TIMER
+        // ============================================================
+        function setTimer(seconds) {
+            post('/timer', { seconds: seconds }).then(() => {
+                log(`⏱️ Timer set to ${seconds}s`, 'info');
+            });
+        }
+        
+        // ============================================================
+        // VIEWERS
+        // ============================================================
+        function addViewer() {
+            const custom = document.getElementById('customViewer').value.trim();
+            const name = custom || ('viewer_' + Date.now());
+            
+            post('/viewer', { user: name }).then(() => {
+                log(`👤 Added viewer: ${name}`, 'viewer');
+                loadServerData();
+            });
+        }
+        
+        function deleteSelectedViewer() {
+            const select = document.getElementById('viewerSelect');
+            const user = select.value;
+            
+            if (!user) {
+                alert('Please select a viewer first!');
+                return;
+            }
+            
+            if (!confirm(`Delete viewer "${user}"?`)) return;
+            
+            post('/remove_bot', { user: user }).then(data => {
+                if (data.success) {
+                    log(`🗑️ Deleted viewer: ${user}`, 'error');
+                    removeFromDropdown(user);
+                    loadServerData();
+                } else {
+                    alert('❌ ' + data.message);
+                    log(`❌ Failed to delete: ${data.message}`, 'error');
+                }
+            });
+        }
+        
+        function deleteOldestViewers(count) {
+            if (!confirm(`Delete ${count} oldest viewers?`)) return;
+            
+            post('/remove_bots', { count: count }).then(data => {
+                if (data.success) {
+                    log(`🗑️ Deleted ${data.removed} viewers`, 'error');
+                    loadServerData();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            });
+        }
+        
+        function deleteAllViewers() {
+            if (!confirm('⚠️ DELETE ALL VIEWERS? This cannot be undone!')) return;
+            if (!confirm('Are you sure?')) return;
+            
+            post('/remove_all_bots').then(data => {
+                if (data.success) {
+                    log(`🗑️ Deleted all ${data.removed} viewers`, 'error');
+                    document.getElementById('viewerSelect').innerHTML = '<option value="">Select a viewer...</option>';
+                    loadServerData();
+                }
+            });
+        }
+        
+        function removeFromDropdown(user) {
+            const select = document.getElementById('viewerSelect');
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === user) {
+                    select.remove(i);
+                    break;
+                }
+            }
+            if (select.options.length === 0) {
+                select.innerHTML = '<option value="">Select a viewer...</option>';
+            }
+        }
+        
+        function addToDropdown(user) {
+            const select = document.getElementById('viewerSelect');
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === user) return;
+            }
+            const opt = document.createElement('option');
+            opt.value = user;
+            opt.textContent = user;
+            select.appendChild(opt);
+        }
+        
+        // ============================================================
+        // GIFTS
+        // ============================================================
+        function sendGift(giftType) {
+            const select = document.getElementById('viewerSelect');
+            const user = select.value;
+            
+            if (!user) {
+                alert('Please select a viewer first!');
+                return;
+            }
+            
+            const giftNames = {
+                'rose': '🌹 Rose',
+                'donut': '🍩 Donut',
+                'donat': '🥐 Donat',
+                'fingerheart': '🫰 Finger Heart'
+            };
+            
+            post('/' + giftType, { user: user }).then(() => {
+                log(`🎁 Sent ${giftNames[giftType] || giftType} to ${user}`, 'gift');
+                loadServerData();
+            });
+        }
+        
+        // ============================================================
+        // SOCKET EVENTS
+        // ============================================================
+        socket.on('status', (data) => {
+            // Update status
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            
+            if (data.connected) {
+                dot.className = 'status-dot online';
+                text.textContent = `🟢 CONNECTED (${data.mode})`;
+            } else {
+                dot.className = 'status-dot offline';
+                text.textContent = '🔴 DISCONNECTED';
+            }
+            
+            document.getElementById('viewerCount').textContent = `👥 ${data.viewers}`;
+            document.getElementById('likeTarget').textContent = `❤️ ${data.target}`;
+            
+            // Update stats from socket
+            if (data.stats) {
+                document.getElementById('totalLikesDisplay').textContent = data.stats.totalLikes || 0;
+                document.getElementById('totalGiftsDisplay').textContent = data.stats.totalGifts || 0;
+                document.getElementById('gamesPlayedDisplay').textContent = data.stats.gamesPlayed || 0;
+            }
+            
+            if (data.highScore) {
+                document.getElementById('hsAvatar').textContent = data.highScore.avatar || '😺';
+                document.getElementById('hsUsername').textContent = data.highScore.username || '-';
+                document.getElementById('hsScore').textContent = data.highScore.score || 0;
+                if (data.highScore.timestamp) {
+                    const d = new Date(data.highScore.timestamp);
+                    document.getElementById('hsTimestamp').textContent = d.toLocaleString();
+                }
+            }
+        });
+        
+        socket.on('viewer_join', (data) => {
+            const user = data.user || data.uniqueId;
+            if (user) {
+                addToDropdown(user);
+                log(`👤 Viewer joined: ${user}`, 'viewer');
+                loadServerData();
+            }
+        });
+        
+        socket.on('viewer_leave', (data) => {
+            const user = data.user || data.uniqueId;
+            if (user) {
+                removeFromDropdown(user);
+                log(`👤 Viewer left: ${user}`, 'info');
+                loadServerData();
+            }
+        });
+        
+        socket.on('like', (data) => {
+            log(`❤️ Received ${data.count || 100} likes`, 'info');
+            loadServerData();
+        });
+        
+        socket.on('gift', (data) => {
+            const giftNames = {
+                'Rose': '🌹 Rose',
+                'Donut': '🍩 Donut',
+                'Donat': '🥐 Donat',
+                'Finger Heart': '🫰 Finger Heart',
+                'rose': '🌹 Rose',
+                'donut': '🍩 Donut',
+                'donat': '🥐 Donat',
+                'fingerheart': '🫰 Finger Heart'
+            };
+            const name = giftNames[data.giftName] || data.giftName || data.originalName;
+            log(`🎁 Gift: ${name} from ${data.user}`, 'gift');
+            loadServerData();
+        });
+        
+        socket.on('set_timer', (data) => {
+            log(`⏱️ Timer updated: ${data.seconds}s`, 'info');
+        });
+        
+        socket.on('spawn_viewer', (data) => {
+            log(`👤 Spawn viewer: ${data.user}`, 'viewer');
+            loadServerData();
+        });
+        
+        socket.on('like_target_update', (data) => {
+            document.getElementById('likeTarget').textContent = `❤️ ${data.target}`;
+        });
+        
+        // ============================================================
+        // KEYBOARD SHORTCUTS
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+Enter = send 100 likes
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                sendLikes(100);
+            }
+            // Ctrl+G = send gift to selected
+            if (e.ctrlKey && e.key === 'g') {
+                e.preventDefault();
+                sendGift('rose');
+            }
+            // Ctrl+R = refresh data
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                loadServerData();
+                log('🔄 Data refreshed', 'info');
+            }
+        });
+        
+        // ============================================================
+        // INIT
+        // ============================================================
+        log('🚀 Admin panel ready', 'success');
+        log('💡 Ctrl+Enter = +100 likes', 'info');
+        log('💡 Ctrl+G = Send Rose gift', 'info');
+        log('💡 Ctrl+R = Refresh data', 'info');
+        
+        // Auto-refresh data every 30 seconds
+        setInterval(loadServerData, 30000);
+    </script>
+</body>
+</html>
