@@ -8,10 +8,9 @@ const { Server } = require("socket.io");
 let WebcastPushConnection = null;
 try {
     const tiktok = require("tiktok-live-connector");
-    WebcastPushConnection =
-        tiktok.WebcastPushConnection ||
-        tiktok.default?.WebcastPushConnection ||
-        tiktok;
+    console.log("TikTok exports:", Object.keys(tiktok));
+    WebcastPushConnection = tiktok.WebcastPushConnection;
+    console.log("Connector type:", typeof WebcastPushConnection);
     console.log("✅ TikTok connector loaded successfully");
 } catch (e) {
     console.error("❌ TikTok connector load failed:", e);
