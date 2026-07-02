@@ -368,9 +368,13 @@ app.post('/admin/mode', (req, res) => {
 });
 
 app.post('/admin/connect', async (req, res) => {
+    console.log("BODY =", req.body);
+
     username = (req.body.username || username || "")
         .trim()
         .replace(/^@/, "");
+
+    console.log("USERNAME =", username);
     
     if (!username) {
         return res.json({ success:false, error:'Please enter TikTok username without @' });
