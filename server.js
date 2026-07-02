@@ -5,26 +5,18 @@ const path = require("path");
 const fetch = require("node-fetch");
 const { Server } = require("socket.io");
 
-let WebcastPushConnection = null;
+let TikTokLiveConnection = null;
 
 try {
     const tiktok = require("tiktok-live-connector");
 
-    console.log("TikTok exports sample:");
-    console.log(
-        Object.keys(tiktok).filter(x =>
-            x.toLowerCase().includes("connect")
-        )
+    console.log("Available connectors:",
+        Object.keys(tiktok).filter(x => x.toLowerCase().includes("connect"))
     );
 
-    console.log("Default export type:", typeof tiktok.default);
+    TikTokLiveConnection = tiktok.TikTokLiveConnection;
 
-    WebcastPushConnection =
-        tiktok.default?.WebcastPushConnection ||
-        tiktok.default ||
-        tiktok.WebcastPushConnection;
-
-    console.log("Connector type:", typeof WebcastPushConnection);
+    console.log("Connector type:", typeof TikTokLiveConnection);
     console.log("✅ TikTok connector loaded successfully");
 
 } catch (e) {
@@ -387,7 +379,7 @@ app.post('/admin/connect', async (req, res) => {
     }
     
     try {
-        if (!WebcastPushConnection) {
+        if (!TikTokLiveConnection) {
             return res.json({ 
                 success: false, 
                 error: 'TikTok connector not installed' 
@@ -399,7 +391,7 @@ app.post('/admin/connect', async (req, res) => {
             tiktokConnection = null;
         }
         
-        tiktokConnection = new WebcastPushConnection(username);
+        tiktokConnection = new TikTokLiveConnection(username);
         
         const timeoutPromise = new Promise((_, reject) => {
             setTimeout(() => reject(new Error('Connection timeout')), 15000);
