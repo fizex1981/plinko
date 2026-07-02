@@ -368,8 +368,14 @@ app.post('/admin/mode', (req, res) => {
 });
 
 app.post('/admin/connect', async (req, res) => {
-    username = req.body.username || username;
+    username = (req.body.username || username || "")
+        .trim()
+        .replace(/^@/, "");
     
+    if (!username) {
+        return res.json({ success:false, error:'Please enter TikTok username without @' });
+    }
+
     if (mode === 'offline') {
         connected = true;
         saveState();
