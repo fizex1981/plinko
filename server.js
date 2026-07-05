@@ -285,9 +285,6 @@ let tiktokConnection = null;
 let realViewers = new Set();
 let botViewers = new Set();
 
-// Queue kekal sehingga server ditutup
-let viewerQueue = new Set();
-
 let peakViewers = appData.peakViewers || 0;
 let totalLikes = appData.stats.totalLikes || 0;
 let totalGifts = appData.stats.totalGifts || 0;
@@ -632,7 +629,6 @@ app.post('/admin/connect', async (req, res) => {
             
             if (user) {
                 realViewers.add(user);
-                viewerQueue.add(user);
                 
                 if (getViewerCount() > peakViewers) {
                     peakViewers = getViewerCount();
@@ -644,8 +640,14 @@ app.post('/admin/connect', async (req, res) => {
                     avatarPath = await downloadAvatar(data.profilePictureUrl, user);
                 }
                 
-                // AUTO ENTRY DISABLED: user must LIKE or send GIFT to spawn.
-                io.emit('viewer_waiting',{user:user,message:'Tap LIKE to enter the game!'});
+                io.emit('viewer_join', { 
+                    user: user, 
+                    uniqueId: user, 
+                    nickname: data.nickname || user,
+                    isBot: false,
+                    avatar: avatarPath || '',
+                    avatarUrl: data.profilePictureUrl || ''
+                });
                 emitStatus();
                 console.log(`👤 Viewer joined: ${user} (Total: ${realViewers.size})`);
             }
@@ -746,19 +748,10 @@ app.post('/admin/connect', async (req, res) => {
         // ============================================================
         // ===== LIKE EVENT =====
         // ============================================================
-        tiktokConnection.on('like', async (data) => {
+        tiktokConnection.on('like', (data) => {
             const count = data.likeCount || 1;
-            const user = data.uniqueId || data.userId;
-            if(!user) return;
-            console.log(`❤️ Like from: ${user} (+${count})`);
             incrementLikes(count);
-            let avatarPath = '';
-            if (data.profilePictureUrl) {
-                avatarPath = await downloadAvatar(data.profilePictureUrl, user) || '';
-            }
-            viewerQueue.delete(user);
-            io.emit('like', { count, user, uniqueId:user, avatar: avatarPath });
-            io.emit('spawn_user',{user,avatar:avatarPath,source:'like'});
+            io.emit('like', { count: count });
         });
 
         // ============================================================
@@ -786,8 +779,6 @@ app.post('/admin/connect', async (req, res) => {
                     updateGiftCount(mappedGift);
                 }
                 
-                io.emit('force_spawn', { user, uniqueId:user, avatar: avatarPath || '', source:'gift' });
-                if(user){ viewerQueue.delete(user); io.emit('spawn_user',{user,avatar:avatarPath||'',source:'gift'}); }
                 io.emit('gift', { 
                     user: user, 
                     giftName: mappedGift,
@@ -1074,23 +1065,7 @@ io.on('connection', (socket) => {
         }
     });
     
-    
-    socket.on('round_finished', () => {
-        io.emit('force_round_reset');
-        console.log('🏁 Round finished - waiting for new likes');
-    });
-
-
-    socket.on('player_killed', ({user}) => {
-        if (!user) return;
-        realViewers.delete(user);
-        appData.viewers = (appData.viewers || []).filter(v => v !== user);
-        saveState();
-        io.emit('player_killed', {user});
-        console.log(`💀 Removed ${user} from active round (score preserved)`);
-    });
-
-socket.on('disconnect', () => {
+    socket.on('disconnect', () => {
         console.log('🔌 Client disconnected:', socket.id);
     });
 });
