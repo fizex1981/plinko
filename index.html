@@ -346,6 +346,132 @@
             box-shadow: 0 min(1.9px, 0.38vw) 0 #b47d2e;
         }
 
+        /* ===== LEADERBOARD STYLES ===== */
+        .leaderboard-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            z-index: 500;
+            border-radius: min(47.5px, 7.6vw);
+            padding: 20px;
+        }
+        .leaderboard-overlay.show {
+            display: flex;
+        }
+        .lb-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        .lb-list {
+            width: 100%;
+            max-width: 350px;
+            font-size: 16px;
+            line-height: 2.2;
+            text-align: left;
+        }
+        .lb-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 4px 10px;
+            border-radius: 30px;
+            background: rgba(255,255,255,0.05);
+            margin-bottom: 4px;
+            transition: background 0.2s;
+        }
+        .lb-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .lb-rank {
+            font-weight: 700;
+            color: #94a3b8;
+            min-width: 30px;
+            text-align: center;
+        }
+        .lb-rank.gold { color: #ffd700; }
+        .lb-rank.silver { color: #c0c0c0; }
+        .lb-rank.bronze { color: #cd7f32; }
+        
+        .lb-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ffd700;
+            background: #1a1a2e;
+            flex-shrink: 0;
+        }
+        .lb-avatar.emoji {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border-color: #475569;
+        }
+        .lb-username {
+            flex: 1;
+            font-weight: 600;
+            color: #e2e8f0;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .lb-score {
+            font-weight: 700;
+            color: #ffd700;
+            font-size: 16px;
+        }
+        .lb-timer {
+            margin-top: 15px;
+            font-size: 20px;
+            color: #94a3b8;
+        }
+        .lb-timer span {
+            color: #fff;
+            font-weight: 700;
+            font-size: 24px;
+        }
+
+        .shield-notification{
+            position:absolute;
+            top:170px;
+            left:50%;
+            transform:translateX(-50%);
+            background:none !important;
+            padding:0;
+            margin:0;
+            border:none !important;
+            border-radius:0;
+            box-shadow:none !important;
+            color:#FFD700;
+            font-family:Arial,sans-serif;
+            font-size:14px;
+            font-weight:bold;
+            text-shadow:1px 1px 2px #000;
+            z-index:400;
+            display:none;
+            pointer-events:none;
+            white-space:nowrap;
+        }
+
+        .gift-icon-noti{width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;}
+        .noti-avatar{width:24px;height:24px;border-radius:50%;object-fit:cover;display:inline-block;vertical-align:middle;margin-right:4px;border:1px solid #fff;}
+        .gift-icon{
+            width:28px;
+            height:28px;
+            object-fit:contain;
+            vertical-align:middle;
+        }
+
         @media screen and (min-width: 769px) {
             .game-wrapper {
                 padding: 10.8px 7.2px 15px;
@@ -492,42 +618,45 @@
                 transform: translateY(4.8px);
                 box-shadow: 0 1.2px 0 #b47d2e;
             }
-        }
-    
-        .leaderboard-overlay{position:absolute;inset:0;background:rgba(0,0,0,.85);display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;z-index:500}
-        .leaderboard-overlay.show{display:flex}
-        .lb-title{font-size:32px;font-weight:bold;margin-bottom:10px}
-        .lb-list{font-size:18px;line-height:1.8;text-align:left}
-    
-        .shield-notification{
-            position:absolute;
-            top:170px;
-            left:50%;
-            transform:translateX(-50%);
-            background:none !important;
-            padding:0;
-            margin:0;
-            border:none !important;
-            border-radius:0;
-            box-shadow:none !important;
-            color:#FFD700;
-            font-family:Arial,sans-serif;
-            font-size:14px;
-            font-weight:bold;
-            text-shadow:1px 1px 2px #000;
-            z-index:400;
-            display:none;
-            pointer-events:none;
-            white-space:nowrap;
-        }
 
-        .gift-icon-noti{width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:4px;}
-        .noti-avatar{width:24px;height:24px;border-radius:50%;object-fit:cover;display:inline-block;vertical-align:middle;margin-right:4px;border:1px solid #fff;}
-        .gift-icon{
-            width:28px;
-            height:28px;
-            object-fit:contain;
-            vertical-align:middle;
+            .lb-list {
+                font-size: 14px;
+                max-width: 280px;
+            }
+            .lb-avatar {
+                width: 28px;
+                height: 28px;
+            }
+            .lb-avatar.emoji {
+                font-size: 16px;
+            }
+            .lb-username {
+                font-size: 12px;
+            }
+            .lb-score {
+                font-size: 14px;
+            }
+        }
+    
+        @media (max-width: 480px) {
+            .shield-status-bar {
+                font-size: 10px;
+                padding: 8px 10px;
+            }
+            .shield-status-bar .gift-icon {
+                width: 20px;
+                height: 20px;
+            }
+            .lb-list {
+                font-size: 13px;
+            }
+            .lb-avatar {
+                width: 26px;
+                height: 26px;
+            }
+            .lb-avatar.emoji {
+                font-size: 16px;
+            }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
@@ -536,21 +665,16 @@
 <body>
     <div class="game-wrapper" id="gameWrapper">
         <div class="shield-status-bar">
-            <div style="display:flex;justify-content:center;align-items:center;gap:10px;white-space:nowrap;">
+            <div style="display:flex;justify-content:center;align-items:center;gap:10px;white-space:nowrap;flex-wrap:wrap;">
                 <span>🛡️ Active Shield =</span>
-
                 <img src="assets/gifts/rose.png" class="gift-icon">
                 <span>x<span id="roseCountDisplay">1</span> (15s)</span>
-
                 <span>|</span>
-
                 <img src="assets/gifts/donut.png" class="gift-icon">
                 <span>x<span id="donutCountDisplay">1</span> (2 Games)</span>
             </div>
-
-            <div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:4px;white-space:nowrap;">
+            <div style="display:flex;justify-content:center;align-items:center;gap:12px;margin-top:4px;white-space:nowrap;flex-wrap:wrap;">
                 <span>🎁 X2 Point =</span>
-
                 <img src="assets/gifts/fingerheart.png" class="gift-icon">
                 <span>x<span id="fingerheartCountDisplay">1</span> (30s)</span>
             </div>
@@ -582,16 +706,11 @@
         <div id="shieldNotification" class="shield-notification"></div>
         <canvas id="gameCanvas" width="450" height="650"></canvas>
 
+        <!-- LEADERBOARD OVERLAY -->
         <div class="leaderboard-overlay" id="leaderboardOverlay">
-            <div id="highScore24" style="text-align:center;margin-bottom:12px">
-                <div style="font-size:20px;font-weight:bold">🏆 HIGH SCORE 24H</div>
-                <div id="hsAvatar" style="font-size:32px">😺</div>
-                <div id="hsUser">@viewer</div>
-                <div id="hsScore" style="font-weight:bold">0</div>
-            </div>
             <div class="lb-title">🏆 TOP 10</div>
             <div class="lb-list" id="leaderboardList"></div>
-            <div style="margin-top:15px;font-size:22px">Next Round In <span id="lbTimer">30</span>s</div>
+            <div class="lb-timer">Next Round In <span id="lbTimer">30</span>s</div>
         </div>
 
         <div class="gameover-overlay" id="gameoverOverlay">
@@ -652,7 +771,6 @@
             
             const cleanUser = username.startsWith('@') ? username.substring(1) : username;
             
-            // Skip if already loaded
             if (avatarImageCache[cleanUser]) return;
             
             const img = new Image();
@@ -731,7 +849,7 @@
             let monsterDestroyed = false;
             let monsterDestroyTimer = null;
             
-            // ===== GIFT STACK SYSTEM (MULTIPLE OWNER) =====
+            // ===== GIFT STACK SYSTEM =====
             const giftOwners = {
                 rose: new Set(),
                 donut: new Set(),
@@ -765,7 +883,10 @@
             let activeViewers = new Set();
             let particles = [];
             let playerScores = {};
-            let highScore24 = { username: '', avatar: '😺', score: 0, timestamp: Date.now() };
+            let highScore24 = { username: '', avatar: '😺', avatarPath: '', score: 0, timestamp: Date.now() };
+            
+            // Leaderboard
+            let leaderboard = [];
             
             // ===== LOAD HIGHSCORE FROM SERVER =====
             function loadHighScoreFromServer() {
@@ -775,23 +896,31 @@
                         .then(data => { 
                             if (data && data.score > 0) {
                                 highScore24 = data; 
-                                document.getElementById('hsAvatar').textContent = data.avatar || '😺';
-                                document.getElementById('hsUser').textContent = data.username || '-';
-                                document.getElementById('hsScore').textContent = data.score || 0;
                                 console.log('🏆 Highscore loaded from server:', data);
                             }
                         })
                         .catch(() => console.log('⚠️ Failed to load highscore from server'));
+                    
+                    fetch('/api/leaderboard')
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data && data.length > 0) {
+                                leaderboard = data;
+                                console.log('🏆 Leaderboard loaded:', leaderboard.length, 'entries');
+                                updateLeaderboardUI();
+                            }
+                        })
+                        .catch(() => console.log('⚠️ Failed to load leaderboard'));
                 }
             }
             
             // ===== SAVE HIGHSCORE TO SERVER =====
-            function saveHighScoreToServer() {
-                if (!isLocal && highScore24.username && highScore24.score > 0) {
+            function saveHighScoreToServer(username, avatar, avatarPath, score) {
+                if (!isLocal && username && score > 0) {
                     fetch('/api/highscore', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(highScore24)
+                        body: JSON.stringify({ username, avatar, avatarPath, score })
                     })
                     .then(r => r.json())
                     .then(data => {
@@ -847,8 +976,17 @@
                 document.getElementById('fingerheartCountDisplay').textContent = fingerheartCount;
             }
 
+            
+            function normalizeGiftUser(username){
+                return username && username.startsWith('@')
+                    ? username
+                    : '@' + username;
+            }
+
+
             // ===== FUNGSI SHIELD & X2 =====
             function hasShield(username) {
+                username = normalizeGiftUser(username);
                 if (giftOwners.rose.has(username)) {
                     const data = giftData.rose[username];
                     if (data && data.endTime && data.endTime > Date.now()) {
@@ -871,6 +1009,7 @@
             }
 
             function hasX2(username) {
+                username = normalizeGiftUser(username);
                 if (giftOwners.fingerheart.has(username)) {
                     const data = giftData.fingerheart[username];
                     if (data && data.endTime && data.endTime > Date.now()) {
@@ -1371,6 +1510,7 @@
 
                     const hasShieldActive = hasShield(this.username);
                     
+                    // ===== KENA MONSTER 1 =====
                     if (!monsterDestroyed) {
                         let dx = this.x - monster.x;
                         let dy = this.y - monster.y;
@@ -1383,77 +1523,115 @@
                                 this.y += Math.sin(angle) * 20;
                                 monster.x -= Math.cos(angle) * 15;
                                 monster.y -= Math.sin(angle) * 15;
-                                
                                 for (let i=0; i<10; i++) {
                                     particles.push(new Particle(this.x, this.y, '#87ceeb'));
                                 }
                             } else {
+                                // KENA MONSTER TANPA SHIELD
                                 if (soundEnabled) playSound('monster');
-                                if (!activeViewers.has(cleanUser)) {
-                                    this.dead = true;
-                                    return;
+                                
+                                // ===== CHECK: Viewer masih aktif? =====
+                                this.dead = true;
+                                activeViewers.delete(cleanUser);
+
+                                if (window.__socket) {
+                                    window.__socket.emit('balloon_removed', { user: cleanUser });
                                 }
-                                this.x=Math.random()*(canvas.width-60)+30;
-                                this.y=30;
-                                this.vx=(Math.random()-0.5)*1.6;
-                                this.vy=0.8;
+
+                                if (false) {
+                                } else {
+                                    this.dead = true;
+                                    console.log(`👤 Balloon removed (viewer left, monster): ${this.username}`);
+                                    if (window.__socket) {
+                                        window.__socket.emit('balloon_removed', { user: this.username });
+                                    }
+                                }
                                 return;
                             }
                         }
                     }
 
+                    // ===== KENA MONSTER 2 =====
                     if (!monster2Destroyed) {
-                        let dx2=this.x-monster2.x;
-                        let dy2=this.y-monster2.y;
-                        let dist2=Math.sqrt(dx2*dx2+dy2*dy2);
-                        if (dist2 < this.radius + monster2.radius){
+                        let dx2 = this.x - monster2.x;
+                        let dy2 = this.y - monster2.y;
+                        let dist2 = Math.sqrt(dx2*dx2 + dy2*dy2);
+                        if (dist2 < this.radius + monster2.radius) {
                             if (hasShieldActive) {
-                                let angle=Math.atan2(dy2,dx2);
-                                this.x += Math.cos(angle)*20;
-                                this.y += Math.sin(angle)*20;
-                                monster2.x -= Math.cos(angle)*15;
-                                monster2.y -= Math.sin(angle)*15;
-                                for(let i=0;i<10;i++){ particles.push(new Particle(this.x,this.y,'#FFD700')); }
-                            } else {
-                                if (!activeViewers.has(cleanUser)) {
-                                    this.dead = true;
-                                    return;
+                                let angle = Math.atan2(dy2, dx2);
+                                this.x += Math.cos(angle) * 20;
+                                this.y += Math.sin(angle) * 20;
+                                monster2.x -= Math.cos(angle) * 15;
+                                monster2.y -= Math.sin(angle) * 15;
+                                for(let i=0; i<10; i++) { 
+                                    particles.push(new Particle(this.x, this.y, '#FFD700')); 
                                 }
-                                this.x=Math.random()*(canvas.width-60)+30;
-                                this.y=30;
-                                this.vx=(Math.random()-0.5)*1.6;
-                                this.vy=0.8;
+                            } else {
+                                // KENA MONSTER 2 TANPA SHIELD
+                                if (soundEnabled) playSound('monster');
+                                
+                                // ===== CHECK: Viewer masih aktif? =====
+                                this.dead = true;
+                                activeViewers.delete(cleanUser);
+
+                                if (window.__socket) {
+                                    window.__socket.emit('balloon_removed', { user: cleanUser });
+                                }
+
+                                if (false) {
+                                } else {
+                                    this.dead = true;
+                                    console.log(`👤 Balloon removed (viewer left, monster2): ${this.username}`);
+                                    if (window.__socket) {
+                                        window.__socket.emit('balloon_removed', { user: this.username });
+                                    }
+                                }
                                 return;
                             }
                         }
                     }
 
+                    // ===== KENA MONSTER 3 =====
                     if (!monster3Destroyed) {
-                        let dx3=this.x-monster3.x;
-                        let dy3=this.y-monster3.y;
-                        let dist3=Math.sqrt(dx3*dx3+dy3*dy3);
-                        if (dist3 < this.radius + monster3.radius){
+                        let dx3 = this.x - monster3.x;
+                        let dy3 = this.y - monster3.y;
+                        let dist3 = Math.sqrt(dx3*dx3 + dy3*dy3);
+                        if (dist3 < this.radius + monster3.radius) {
                             if (hasShieldActive) {
-                                let angle=Math.atan2(dy3,dx3);
-                                this.x += Math.cos(angle)*20;
-                                this.y += Math.sin(angle)*20;
-                                monster3.x -= Math.cos(angle)*15;
-                                monster3.y -= Math.sin(angle)*15;
-                                for(let i=0;i<10;i++){ particles.push(new Particle(this.x,this.y,'#FFD700')); }
-                            } else {
-                                if (!activeViewers.has(cleanUser)) {
-                                    this.dead = true;
-                                    return;
+                                let angle = Math.atan2(dy3, dx3);
+                                this.x += Math.cos(angle) * 20;
+                                this.y += Math.sin(angle) * 20;
+                                monster3.x -= Math.cos(angle) * 15;
+                                monster3.y -= Math.sin(angle) * 15;
+                                for(let i=0; i<10; i++) { 
+                                    particles.push(new Particle(this.x, this.y, '#FFD700')); 
                                 }
-                                this.x=Math.random()*(canvas.width-60)+30;
-                                this.y=30;
-                                this.vx=(Math.random()-0.5)*1.6;
-                                this.vy=0.8;
+                            } else {
+                                // KENA MONSTER 3 TANPA SHIELD
+                                if (soundEnabled) playSound('monster');
+                                
+                                // ===== CHECK: Viewer masih aktif? =====
+                                this.dead = true;
+                                activeViewers.delete(cleanUser);
+
+                                if (window.__socket) {
+                                    window.__socket.emit('balloon_removed', { user: cleanUser });
+                                }
+
+                                if (false) {
+                                } else {
+                                    this.dead = true;
+                                    console.log(`👤 Balloon removed (viewer left, monster3): ${this.username}`);
+                                    if (window.__socket) {
+                                        window.__socket.emit('balloon_removed', { user: this.username });
+                                    }
+                                }
                                 return;
                             }
                         }
                     }
 
+                    // ===== SHOOT POWERUP =====
                     if (activePowerUps['shoot'] && !monsterDestroyed) {
                         let dx = this.x - monster.x;
                         let dy = this.y - monster.y;
@@ -1482,6 +1660,7 @@
                         }
                     }
 
+                    // ===== JATUH KE SLOT =====
                     if (this.y > canvas.height - 50) {
                         if (!activeViewers.has(cleanUser)) {
                             this.dead = true;
@@ -1498,22 +1677,52 @@
                         }
                         
                         score += reward;
-                        playerScores[this.username]=(playerScores[this.username]||0)+reward;
-                        const pNow=playerScores[this.username];
-                        const av=['😺','😸','😻','🐱','🐯','🦊','🐻','🐼'];
-                        const curAvatar=av[Math.abs(this.username.length)%av.length];
-                        if(pNow>highScore24.score){
-                            highScore24={
+                        playerScores[this.username] = (playerScores[this.username] || 0) + reward;
+                        const pNow = playerScores[this.username];
+                        
+                        const avatars = ['😺','😸','😻','🐱','🐯','🦊','🐻','🐼'];
+                        const curAvatar = avatars[Math.abs(this.username.length) % avatars.length];
+                        const avatarPath = this.avatarPath || '';
+                        
+                        if(pNow > highScore24.score){
+                            highScore24 = {
                                 username: this.username,
                                 avatar: curAvatar,
+                                avatarPath: avatarPath,
                                 score: pNow,
                                 timestamp: Date.now()
                             };
                             try {
                                 localStorage.setItem('highScore24', JSON.stringify(highScore24));
                             } catch(e) {}
-                            saveHighScoreToServer();
+                            saveHighScoreToServer(this.username, curAvatar, avatarPath, pNow);
                         }
+                        
+                        // Update leaderboard via API
+                        fetch('/api/highscore', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                username: this.username, 
+                                avatar: curAvatar, 
+                                avatarPath: avatarPath,
+                                score: pNow 
+                            })
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.highScore) {
+                                fetch('/api/leaderboard')
+                                    .then(r => r.json())
+                                    .then(lb => {
+                                        leaderboard = lb;
+                                        updateLeaderboardUI();
+                                    })
+                                    .catch(() => {});
+                            }
+                        })
+                        .catch(() => {});
+                        
                         if (soundEnabled) playSound('score');
 
                         try {
@@ -1530,13 +1739,20 @@
                             particles.push(new Particle(this.x, canvas.height-40, '#ffe087'));
                         }
 
+                        // ===== CHECK: Viewer masih aktif? =====
                         if (activeViewers.has(cleanUser)) {
-                            this.x=Math.random()*(canvas.width-60)+30;
-                            this.y=30;
-                            this.vx=(Math.random()-0.5)*1.6;
-                            this.vy=0.8;
+                            // Viewer masih ada → spawn balik ke atas
+                            this.x = Math.random() * (canvas.width - 60) + 30;
+                            this.y = 30;
+                            this.vx = (Math.random() - 0.5) * 1.6;
+                            this.vy = 0.8;
                         } else {
+                            // Viewer dah leave → balloon hilang terus
                             this.dead = true;
+                            console.log(`👤 Balloon removed (viewer left, drop): ${this.username}`);
+                            if (window.__socket) {
+                                window.__socket.emit('balloon_removed', { user: this.username });
+                            }
                         }
                         return;
                     }
@@ -1580,7 +1796,6 @@
                     const avatarY = this.y + 6;
                     const avatarRadius = 16;
 
-                    // ===== AVATAR BULAT DENGAN GAMBAR =====
                     ctx.save();
                     
                     if (hasDonut) {
@@ -1593,7 +1808,6 @@
                     ctx.arc(this.x, avatarY, avatarRadius, 0, Math.PI * 2);
                     ctx.clip();
                     
-                    // Try to load avatar image from cache
                     const avatarKey = this.cleanUsername || this.username.replace('@', '');
                     const cachedImg = avatarImageCache[avatarKey];
                     
@@ -1606,7 +1820,6 @@
                             avatarRadius * 2
                         );
                     } else {
-                        // Fallback to emoji
                         ctx.fillStyle = '#1a1a2e';
                         ctx.fillRect(this.x - avatarRadius, avatarY - avatarRadius, avatarRadius * 2, avatarRadius * 2);
                         ctx.restore();
@@ -1625,7 +1838,6 @@
                     
                     ctx.restore();
 
-                    // Border
                     ctx.save();
                     ctx.beginPath();
                     ctx.arc(this.x, avatarY, avatarRadius, 0, Math.PI * 2);
@@ -2089,6 +2301,40 @@
             }
 
             // ============================================================
+            // LEADERBOARD UI
+            // ============================================================
+            function updateLeaderboardUI() {
+                const list = document.getElementById('leaderboardList');
+                if (!list) return;
+                
+                if (!leaderboard || leaderboard.length === 0) {
+                    list.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;">No scores yet</div>';
+                    return;
+                }
+                
+                list.innerHTML = leaderboard.map((item, index) => {
+                    const rank = index + 1;
+                    let rankClass = 'lb-rank';
+                    if (rank === 1) rankClass += ' gold';
+                    else if (rank === 2) rankClass += ' silver';
+                    else if (rank === 3) rankClass += ' bronze';
+                    
+                    const avatarHtml = item.avatarPath && item.avatarPath.startsWith('/avatars/') 
+                        ? `<img src="${item.avatarPath}" class="lb-avatar" onerror="this.style.display='none'">`
+                        : `<div class="lb-avatar emoji">${item.avatar || '😺'}</div>`;
+                    
+                    return `
+                        <div class="lb-item">
+                            <span class="${rankClass}">#${rank}</span>
+                            ${avatarHtml}
+                            <span class="lb-username">${item.username}</span>
+                            <span class="lb-score">${item.score}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // ============================================================
             // SOCKET.IO
             // ============================================================
             if (typeof io !== 'undefined') {
@@ -2096,10 +2342,32 @@
                     const socket = io();
                     window.__socket = socket;
 
-                    socket.on('viewer_join', data => {
+                    // ===== VIEWER JOIN =====
+                    socket.on('new_round_start', ()=>{
+    activeViewers.clear();
+    balloons=[];
+    playerScores={};
+    console.log('🔄 New round from server');
+});
+
+
+            socket.on('force_round_reset', () => {
+                console.log('🔄 Force round reset');
+                balloons = [];
+                activeViewers.clear();
+                playerScores = {};
+                likeCount = 0;
+                likeTarget = 100;
+                lockedRoundTarget = 100;
+                if (typeof updateLikeUI === 'function') updateLikeUI();
+            });
+
+socket.on('viewer_join', (data) => {
                         const user = data.user || data.uniqueId;
                         if (user) {
                             const cleanUser = user.startsWith('@') ? user.substring(1) : user;
+                            
+                            console.log(`📥 Viewer join: ${cleanUser}, isBot: ${data.isBot}`);
                             
                             const exists = balloons.some(b => {
                                 const bClean = b.cleanUsername || b.username.replace('@', '');
@@ -2120,7 +2388,6 @@
                             balloons.push(b);
                             activeViewers.add(cleanUser);
                             
-                            // Load avatar image
                             if (data.avatar) {
                                 loadAvatarImage(user, data.avatar);
                             }
@@ -2130,43 +2397,80 @@
                                 likeTarget = lockedRoundTarget;
                             }
                             updateLikeUI();
-                            console.log(`👤 ${data.isBot ? '🤖 Bot' : '👤 Real'} joined: ${cleanUser}`);
+                            
+                            const type = data.isBot ? '🤖 Bot' : '👤 Real';
+                            console.log(`${type} joined: ${cleanUser}`);
                         }
                     });
 
-                    socket.on('viewer_leave', (data) => {
+                    // ===== VIEWER LEAVE - HANYA BILA LEAVE =====
+                    
+            socket.on('player_killed', (data) => {
+                const user = (data.user || '').replace('@','');
+                activeViewers.delete(user);
+                balloons = balloons.filter(b => {
+                    const name = (b.cleanUsername || (b.username||'').replace('@',''));
+                    return name !== user;
+                });
+                // keep playerScores[user] so score remains after re-like
+                console.log('💀 Player removed, score preserved:', user);
+            });
+
+socket.on('viewer_leave', (data) => {
                         const user = data.user || data.uniqueId;
                         if (user) {
                             const cleanUser = user.startsWith('@') ? user.substring(1) : user;
                             
-                            console.log(`👤 Removing viewer: ${cleanUser}`);
-                            
-                            balloons = balloons.filter(b => {
-                                const bClean = b.cleanUsername || b.username.replace('@', '');
-                                return bClean !== cleanUser;
-                            });
-                            
-                            if (activeViewers) {
+                            // ===== REAL VIEWER LEAVE =====
+                            if (!data.isBot) {
+                                console.log(`👤 Real viewer leaving: ${cleanUser}`);
+                                
+                                // Hapus dari activeViewers supaya balloon akan hilang bila drop/kena monster
                                 activeViewers.delete(cleanUser);
+                                removeFromDropdown(cleanUser);
+                                delete avatarImageCache[cleanUser];
+                                
+                                // Jangan hapus balloon terus - tunggu dia jatuh atau kena monster
+                                console.log(`👤 Real viewer marked as left: ${cleanUser} (balloon will disappear on drop/hit)`);
+                                
+                                if (likeCount === 0) {
+                                    lockedRoundTarget = Math.max(100, balloons.length * 100);
+                                    likeTarget = lockedRoundTarget;
+                                }
+                                updateLikeUI();
                             }
                             
-                            // Remove avatar from cache to free memory
-                            delete avatarImageCache[cleanUser];
-                            
-                            if (likeCount === 0) {
-                                lockedRoundTarget = Math.max(100, balloons.length * 100);
-                                likeTarget = lockedRoundTarget;
+                            // ===== BOT VIEWER LEAVE (ADMIN DELETE) =====
+                            else if (data.isBot && data.reason === 'admin_remove') {
+                                console.log(`🤖 Bot removed by admin: ${cleanUser}`);
+                                
+                                // Hapus dari game SEGERA
+                                balloons = balloons.filter(b => {
+                                    const bClean = b.cleanUsername || b.username.replace('@', '');
+                                    return bClean !== cleanUser;
+                                });
+                                
+                                activeViewers.delete(cleanUser);
+                                removeFromDropdown(cleanUser);
+                                delete avatarImageCache[cleanUser];
+                                
+                                if (likeCount === 0) {
+                                    lockedRoundTarget = Math.max(100, balloons.length * 100);
+                                    likeTarget = lockedRoundTarget;
+                                }
+                                updateLikeUI();
+                                
+                                console.log(`🤖 Bot removed from game: ${cleanUser}`);
                             }
-                            updateLikeUI();
-                            
-                            console.log(`👤 Viewer removed: ${cleanUser}`);
                         }
                     });
 
-                    socket.on('like', data => {
+                    // ===== LIKE =====
+                    socket.on('like', (data) => {
                         const count = data.count || 100;
                         likeCount += count;
                         totalLikes += count;
+                        
                         while (likeCount >= likeTarget && likeTarget > 0) {
                             likeCount -= likeTarget;
                             fireRandomTurret();
@@ -2175,10 +2479,43 @@
                         saveGameStatsToServer();
                     });
 
-                    socket.on('gift', data => {
+                    // ===== GIFT =====
+                    
+socket.on('force_spawn', (data) => {
+    const user = (data.user || '').replace('@','');
+    if (!user) return;
+
+    const exists = balloons.some(b =>
+        (b.cleanUsername || (b.username || '').replace('@','')) === user
+    );
+
+    if (!exists) {
+        activeViewers.add(user);
+
+        const b = new Balloon(Math.random() * (canvas.width - 60) + 30);
+        b.username = '@' + user;
+        b.cleanUsername = user;
+        b.avatarPath = data.avatar || '';
+
+        balloons.push(b);
+
+        if (!playerScores[user]) playerScores[user] = 0;
+    }
+});
+
+
+socket.on('viewer_waiting',(d)=>{
+    showShieldNotification(`👋 @${d.user} joined! ❤️ Tap LIKE to enter the game!`);
+});
+
+socket.on('monster_queue_notice',(d)=>{
+    showShieldNotification(`💀 @${d.user} was eaten! ❤️ Tap LIKE or send a GIFT to return!`);
+});
+
+socket.on('gift', (data) => {
                         const avatar = data.avatar || data.avatarUrl || 'assets/default-avatar.png';
+                        const user = data.user;
                         
-                        // Load avatar for gift notification
                         if (data.avatar && data.user) {
                             loadAvatarImage(data.user, data.avatar);
                         }
@@ -2213,6 +2550,26 @@
                     socket.on('like_target_update', (data) => {
                         likeTarget = data.target;
                         updateLikeUI();
+                    });
+
+                    // ===== LEADERBOARD UPDATE =====
+                    socket.on('leaderboard_update', (data) => {
+                        if (data && data.length > 0) {
+                            leaderboard = data;
+                            updateLeaderboardUI();
+                            console.log('🏆 Leaderboard updated:', leaderboard.length, 'entries');
+                        }
+                    });
+
+                    // ===== BALLOON REMOVED - Sync dari frontend =====
+                    socket.on('balloon_removed', (data) => {
+                        const user = data.user;
+                        if (user) {
+                            const cleanUser = user.startsWith('@') ? user.substring(1) : user;
+                            // Hapus dari dropdown jika masih ada
+                            removeFromDropdown(cleanUser);
+                            console.log(`🧹 Balloon removed sync: ${cleanUser}`);
+                        }
                     });
 
                     console.log('✅ Socket.io connected');
@@ -2401,7 +2758,15 @@
                 gameActive = true;
                 gamePaused = false;
                 gameoverOverlay.classList.remove('show');
+
+                // ROUND BARU: hanya viewer yang tekan like semula akan masuk
                 balloons = [];
+                activeViewers.clear();
+                playerScores = {};
+                likeCount = 0;
+                likeTarget = 100;
+                lockedRoundTarget = 100;
+
                 particles = [];
                 monster.x = canvas.width / 2;
                 monster.y = canvas.height - 100;
@@ -2423,6 +2788,10 @@
                 
                 updatePowerIndicator();
             }
+
+            playAgainBtn.addEventListener('click', function(){
+                if(window.__socket){ window.__socket.emit('round_finished'); }
+            });
 
             playAgainBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -2460,6 +2829,8 @@
                     likeTarget = lockedRoundTarget;
                 }
                 updateLikeUI();
+                
+                console.log(`🤖 Bot added: ${cleanUser}`);
             };
             
             window.add10Bot = function() {
@@ -2490,6 +2861,7 @@
                     likeTarget = lockedRoundTarget;
                 }
                 updateLikeUI();
+                console.log(`🤖 Added 10 bots`);
             };
             
             window.addGift = function() {
@@ -2531,16 +2903,8 @@
                         
                         saveGameStatsToServer();
 
-                        let top=Object.entries(playerScores)
-                        .sort((a,b)=>b[1]-a[1])
-                        .slice(0,10);
-                        document.getElementById('hsAvatar').textContent=highScore24.avatar||'😺';
-                        document.getElementById('hsUser').textContent=highScore24.username||'-';
-                        document.getElementById('hsScore').textContent=highScore24.score||0;
-
-                        document.getElementById('leaderboardList').innerHTML=top.map((x,i)=>
-                            `${i+1}. ${emojiForName(x[0])} ${x[0]} - ${x[1]}`
-                        ).join('<br>');
+                        // Update leaderboard UI
+                        updateLeaderboardUI();
 
                         document.getElementById('leaderboardOverlay').classList.add('show');
 
@@ -2583,7 +2947,23 @@
                 }
             },1000);
 
-        })();
+            // Update leaderboard UI initial
+            setTimeout(updateLeaderboardUI, 1000);
+
+        
+socket.on('spawn_user',(d)=>{
+ const user=(d.user||'').replace('@',''); if(!user) return;
+ const exists=balloons.some(b=>((b.cleanUsername||'')===user)||((b.username||'').replace('@','')===user));
+ if(exists) return;
+ activeViewers.add(user);
+ const b=new Balloon(Math.random()*(canvas.width-60)+30);
+ b.username='@'+user; b.cleanUsername=user; b.avatarPath=d.avatar||''; balloons.push(b);
+ showShieldNotification((d.source==='gift'?'🎁':'❤️')+' @'+user+' entered the game!');
+});
+
+socket.on('viewer_waiting',d=>showShieldNotification('👋 @'+d.user+' joined! ❤️ Tap LIKE to enter the game!'));
+socket.on('monster_queue_notice',d=>showShieldNotification('💀 @'+d.user+' was eaten! ❤️ Tap LIKE or send a GIFT to return!'));
+})();
     </script>
 
     <div id="adminPanel" style="display:none;position:fixed;top:10px;right:10px;z-index:99999;background:#fff;padding:8px;border-radius:8px;border:2px solid #000">

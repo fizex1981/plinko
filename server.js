@@ -5,22 +5,32 @@ const path = require("path");
 const fetch = require("node-fetch");
 const { Server } = require("socket.io");
 
+// ===== TIKTOK CONNECTOR =====
 let WebcastPushConnection = null;
 
 try {
-    const tiktok = require("tiktok-live-connector");
-
-    console.log("Available connectors:",
-        Object.keys(tiktok).filter(x => x.toLowerCase().includes("connect"))
-    );
-
-    WebcastPushConnection = tiktok.WebcastPushConnection;
-
-    console.log("Connector type:", typeof WebcastPushConnection);
-    console.log("✅ TikTok connector loaded successfully");
-
-} catch (e) {
-    console.error("❌ TikTok connector load failed:", e);
+    const TikTokLive = require('tiktok-live-connector');
+    WebcastPushConnection = TikTokLive.WebcastPushConnection || TikTokLive.default?.WebcastPushConnection;
+    if (WebcastPushConnection) {
+        console.log('✅ TikTok connector loaded (v2 style)');
+    } else {
+        throw new Error('WebcastPushConnection not found');
+    }
+} catch (e1) {
+    try {
+        const { WebcastPushConnection: WPC } = require('tiktok-live-connector');
+        WebcastPushConnection = WPC;
+        console.log('✅ TikTok connector loaded (v1 style)');
+    } catch (e2) {
+        try {
+            const tiktok = require('tiktok-live-connector');
+            WebcastPushConnection = tiktok.WebcastPushConnection;
+            console.log('✅ TikTok connector loaded (fallback)');
+        } catch (e3) {
+            console.log('❌ Failed to load TikTok connector:', e3.message);
+            console.log('⚠️ Run: npm install tiktok-live-connector@2.0.0');
+        }
+    }
 }
 
 const app = express();
@@ -38,7 +48,7 @@ app.use(express.static(__dirname));
 const ADMIN_PASSWORD = "plinko3815";
 
 // ============================================================
-// AVATAR CACHE SYSTEM (TANPA RESIZE)
+// AVATAR CACHE SYSTEM
 // ============================================================
 const AVATAR_DIR = path.join(__dirname, 'avatars');
 const AVATAR_CACHE = new Map();
@@ -49,9 +59,6 @@ if (!fs.existsSync(AVATAR_DIR)) {
     fs.mkdirSync(AVATAR_DIR, { recursive: true });
 }
 
-// ============================================================
-// DOWNLOAD AVATAR DENGAN QUEUE (LIMIT 1 CONCURRENT)
-// ============================================================
 async function downloadAvatar(url, username) {
     return new Promise((resolve) => {
         DOWNLOAD_QUEUE.push({ url, username, resolve });
@@ -71,7 +78,6 @@ async function processQueue() {
         const filename = `${cleanUser}.png`;
         const filepath = path.join(AVATAR_DIR, filename);
         
-        // Check if already exists
         if (fs.existsSync(filepath)) {
             const stats = fs.statSync(filepath);
             const age = Date.now() - stats.mtimeMs;
@@ -84,7 +90,6 @@ async function processQueue() {
             }
         }
         
-        // Download with timeout
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 10000);
         
@@ -114,9 +119,6 @@ async function processQueue() {
     processQueue();
 }
 
-// ============================================================
-// AUTO DELETE AVATARS OLDER THAN 24 HOURS
-// ============================================================
 function cleanOldAvatars() {
     const now = Date.now();
     const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
@@ -141,9 +143,7 @@ function cleanOldAvatars() {
         if (deleted > 0) {
             console.log(`🧹 Deleted ${deleted} old avatars (>24h)`);
         }
-    } catch (e) {
-        // Ignore errors
-    }
+    } catch (e) {}
 }
 
 setInterval(cleanOldAvatars, 60 * 60 * 1000);
@@ -157,12 +157,15 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 const defaultData = {
     viewers: [],
     peakViewers: 0,
-    highScore24: {
+    highScoreAllTime: {
         username: '',
         avatar: '😺',
+        avatarPath: '',
         score: 0,
         timestamp: Date.now()
     },
+    leaderboard24h: [],
+    lastLeaderboardReset: new Date().toDateString(),
     settings: {
         mode: 'offline',
         username: 'ohmeowku',
@@ -207,43 +210,148 @@ function saveData(data) {
 let appData = loadData();
 
 // ============================================================
+// LEADERBOARD 24 JAM
+// ============================================================
+const LEADERBOARD_RESET_HOUR = 0; // 12:00 AM
+const LEADERBOARD_MAX = 10;
+let leaderboard24h = appData.leaderboard24h || [];
+
+function resetLeaderboard24h() {
+    if (leaderboard24h.length > 0) {
+        console.log(`🏆 [24H] Leaderboard reset - ${leaderboard24h.length} entries cleared`);
+        leaderboard24h = [];
+        appData.leaderboard24h = leaderboard24h;
+        saveData(appData);
+        io.emit('leaderboard_24h_update', { leaderboard: [], reset: true });
+    }
+}
+
+function checkAndResetLeaderboard() {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const today = now.toDateString();
+    
+    if (currentHour === LEADERBOARD_RESET_HOUR) {
+        if (appData.lastLeaderboardReset !== today) {
+            resetLeaderboard24h();
+            appData.lastLeaderboardReset = today;
+            saveData(appData);
+        }
+    }
+}
+
+function updateLeaderboard24h(username, avatar, avatarPath, score) {
+    checkAndResetLeaderboard();
+    
+    const existing = leaderboard24h.find(item => item.username === username);
+    
+    if (existing) {
+        if (score > existing.score) {
+            existing.score = score;
+            existing.avatar = avatar || existing.avatar;
+            existing.avatarPath = avatarPath || existing.avatarPath;
+            existing.timestamp = Date.now();
+        }
+    } else {
+        leaderboard24h.push({
+            username: username,
+            avatar: avatar || '😺',
+            avatarPath: avatarPath || '',
+            score: score,
+            timestamp: Date.now()
+        });
+    }
+    
+    leaderboard24h.sort((a, b) => b.score - a.score);
+    
+    if (leaderboard24h.length > LEADERBOARD_MAX) {
+        leaderboard24h = leaderboard24h.slice(0, LEADERBOARD_MAX);
+    }
+    
+    appData.leaderboard24h = leaderboard24h;
+    saveData(appData);
+    io.emit('leaderboard_24h_update', { leaderboard: leaderboard24h });
+}
+
+// ============================================================
 // SERVER STATE
 // ============================================================
 let mode = appData.settings.mode || "offline";
 let username = appData.settings.username || "ohmeowku";
 let connected = appData.settings.connected || false;
 let tiktokConnection = null;
-let activeViewers = new Set(appData.viewers || []);
+
+// REAL vs BOT viewers
+let realViewers = new Set();
+let botViewers = new Set();
+
+// Queue kekal sehingga server ditutup
+let viewerQueue = new Set();
+
 let peakViewers = appData.peakViewers || 0;
 let totalLikes = appData.stats.totalLikes || 0;
 let totalGifts = appData.stats.totalGifts || 0;
 let gamesPlayed = appData.stats.gamesPlayed || 0;
 
+// Event counter untuk log
+let eventCounter = {
+    member: 0,
+    member_leave: 0,
+    room_viewer_list: 0,
+    room_user_count: 0,
+    disconnected: 0,
+    like: 0,
+    gift: 0,
+    chat: 0
+};
+
+function getAllViewers() {
+    return new Set([...realViewers, ...botViewers]);
+}
+
+function getViewerCount() {
+    return realViewers.size + botViewers.size;
+}
+
 function saveState() {
-    appData.viewers = Array.from(activeViewers);
+    appData.viewers = Array.from(getAllViewers());
     appData.peakViewers = peakViewers;
     appData.settings = { mode, username, connected };
-    appData.stats = { totalLikes, totalGifts, gamesPlayed, totalViewers: activeViewers.size };
+    appData.stats = { totalLikes, totalGifts, gamesPlayed, totalViewers: getViewerCount() };
+    appData.leaderboard24h = leaderboard24h;
     return saveData(appData);
 }
 
-function updateHighScore(highScore) {
-    if (highScore.score > appData.highScore24.score) {
-        appData.highScore24 = {
-            username: highScore.username || '',
-            avatar: highScore.avatar || '😺',
-            score: parseInt(highScore.score) || 0,
+function updateHighScore(username, avatar, avatarPath, score) {
+    // Update all-time highscore
+    if (score > appData.highScoreAllTime.score) {
+        appData.highScoreAllTime = {
+            username: username || '',
+            avatar: avatar || '😺',
+            avatarPath: avatarPath || '',
+            score: parseInt(score) || 0,
             timestamp: Date.now()
         };
         saveData(appData);
-        return true;
     }
-    return false;
+    
+    // Update leaderboard 24 jam
+    updateLeaderboard24h(username, avatar, avatarPath, parseInt(score));
+    
+    return true;
 }
 
 function updateGiftCount(giftName) {
-    if (appData.giftCounts.hasOwnProperty(giftName)) {
-        appData.giftCounts[giftName]++;
+    const giftMap = {
+        'rose': 'rose',
+        'donut': 'donut', 
+        'donat': 'donat',
+        'fingerheart': 'fingerheart',
+        'Finger Heart': 'fingerheart'
+    };
+    const key = giftMap[giftName] || giftName;
+    if (appData.giftCounts.hasOwnProperty(key)) {
+        appData.giftCounts[key]++;
         totalGifts++;
         saveData(appData);
     }
@@ -260,7 +368,7 @@ function incrementLikes(count) {
 }
 
 function getTarget() {
-    return Math.max(100, peakViewers * 100);
+    return Math.max(100, getViewerCount() * 100);
 }
 
 function emitStatus() {
@@ -269,20 +377,89 @@ function emitStatus() {
         mode,
         username,
         connected,
-        viewers: activeViewers.size,
+        viewers: getViewerCount(),
+        realViewers: realViewers.size,
+        botViewers: botViewers.size,
         target: target,
         peak: peakViewers,
         stats: appData.stats,
-        highScore: appData.highScore24
+        highScore: appData.highScoreAllTime,
+        leaderboard24h: leaderboard24h
     });
     io.emit("like_target_update", { target: target });
 }
 
-app.use('/avatars', express.static(AVATAR_DIR));
+// ============================================================
+// ===== REFRESH VIEWER LIST SETIAP 30 SAAT =====
+// ============================================================
+async function refreshViewerList() {
+    if (!connected || !tiktokConnection) {
+        console.log('🔄 [REFRESH] Skipped - not connected');
+        return;
+    }
+    
+    try {
+        // Cuba dapatkan viewer list
+        let viewers = null;
+        
+        if (typeof tiktokConnection.getViewerList === 'function') {
+            viewers = await tiktokConnection.getViewerList();
+        } else if (typeof tiktokConnection.getRoomViewerList === 'function') {
+            viewers = await tiktokConnection.getRoomViewerList();
+        }
+        
+        if (!viewers || viewers.length === 0) {
+            console.log('🔄 [REFRESH] No viewers data');
+            return;
+        }
+        
+        // Build current viewers set
+        const currentViewers = new Set();
+        viewers.forEach(v => {
+            const userId = v.uniqueId || v.userId || v;
+            if (userId) currentViewers.add(userId);
+        });
+        
+        console.log(`🔄 [REFRESH] Room: ${currentViewers.size} viewers, Our: ${realViewers.size}`);
+        
+        // Cari viewer yang leave
+        const leftViewers = [];
+        realViewers.forEach(user => {
+            if (!currentViewers.has(user)) {
+                leftViewers.push(user);
+            }
+        });
+        
+        if (leftViewers.length > 0) {
+            console.log(`👋 [REFRESH] ${leftViewers.length} viewers left: ${leftViewers.join(', ')}`);
+            
+            leftViewers.forEach(user => {
+                realViewers.delete(user);
+                io.emit('viewer_leave', { 
+                    user: user, 
+                    uniqueId: user,
+                    isBot: false,
+                    reason: 'refresh_left_room'
+                });
+                console.log(`   ✅ Emitted viewer_leave for: ${user}`);
+            });
+            
+            emitStatus();
+            saveState();
+        } else {
+            console.log(`🔄 [REFRESH] No viewers left`);
+        }
+        
+    } catch (e) {
+        console.log(`🔄 [REFRESH] Error: ${e.message}`);
+    }
+}
 
 // ============================================================
 // API ROUTES
 // ============================================================
+
+app.use('/avatars', express.static(AVATAR_DIR));
 
 app.get('/health', (req, res) => {
     res.json({
@@ -290,49 +467,56 @@ app.get('/health', (req, res) => {
         mode,
         connected,
         username,
-        viewers: activeViewers.size,
+        viewers: getViewerCount(),
+        realViewers: realViewers.size,
+        botViewers: botViewers.size,
         target: getTarget(),
         peak: peakViewers,
         uptime: process.uptime(),
-        highScore: appData.highScore24,
+        highScore: appData.highScoreAllTime,
         stats: appData.stats,
         giftCounts: appData.giftCounts,
-        avatarCount: AVATAR_CACHE.size
+        leaderboard24h: leaderboard24h,
+        avatarCount: AVATAR_CACHE.size,
+        eventCounter: eventCounter
     });
 });
 
 app.get('/api/data', (req, res) => {
     res.json({
-        highScore: appData.highScore24,
+        highScore: appData.highScoreAllTime,
         stats: appData.stats,
         giftCounts: appData.giftCounts,
         peakViewers: appData.peakViewers,
         settings: appData.settings,
-        lastUpdated: appData.lastUpdated
+        lastUpdated: appData.lastUpdated,
+        realViewers: Array.from(realViewers),
+        botViewers: Array.from(botViewers),
+        leaderboard24h: leaderboard24h
     });
 });
 
+app.get('/api/leaderboard24h', (req, res) => {
+    checkAndResetLeaderboard();
+    res.json(leaderboard24h);
+});
+
+app.get('/api/highscore', (req, res) => {
+    res.json(appData.highScoreAllTime);
+});
+
 app.post('/api/highscore', (req, res) => {
-    const { username, avatar, score } = req.body;
+    const { username, avatar, avatarPath, score } = req.body;
     if (username && score !== undefined) {
-        const newHigh = {
-            username: username,
-            avatar: avatar || '😺',
-            score: parseInt(score) || 0
-        };
-        const isNewRecord = updateHighScore(newHigh);
+        updateHighScore(username, avatar, avatarPath, parseInt(score));
         res.json({ 
             success: true, 
-            highScore: appData.highScore24,
-            isNewRecord: isNewRecord
+            highScore: appData.highScoreAllTime,
+            leaderboard24h: leaderboard24h
         });
     } else {
         res.status(400).json({ success: false, error: 'Missing data' });
     }
-});
-
-app.get('/api/highscore', (req, res) => {
-    res.json(appData.highScore24);
 });
 
 app.post('/api/stats', (req, res) => {
@@ -367,17 +551,14 @@ app.post('/admin/mode', (req, res) => {
     res.json({ success: true, mode });
 });
 
+// ============================================================
+// ===== CONNECT =====
+// ============================================================
 app.post('/admin/connect', async (req, res) => {
-    console.log("BODY =", req.body);
-
-    username = (req.body.username || username || "")
-        .trim()
-        .replace(/^@/, "");
-
-    console.log("USERNAME =", username);
+    username = (req.body.username || username || "").trim().replace(/^@/, "");
     
     if (!username) {
-        return res.json({ success:false, error:'Please enter TikTok username without @' });
+        return res.json({ success: false, error: 'Please enter TikTok username' });
     }
 
     if (mode === 'offline') {
@@ -385,122 +566,266 @@ app.post('/admin/connect', async (req, res) => {
         saveState();
         io.emit('live_status', { connected: true, username });
         emitStatus();
-        return res.json({ success: true, status: 'OFFLINE CONNECTED' });
+        return res.json({ success: true, status: 'OFFLINE MODE' });
     }
     
     try {
         if (!WebcastPushConnection) {
             return res.json({ 
                 success: false, 
-                error: 'TikTok connector not installed' 
+                error: 'TikTok connector not available. Please install: npm install tiktok-live-connector@2.0.0' 
             });
         }
         
         if (tiktokConnection) {
-            try { tiktokConnection.disconnect(); } catch (e) {}
+            try { 
+                tiktokConnection.disconnect(); 
+            } catch (e) {}
             tiktokConnection = null;
         }
         
-        console.log("CONNECTING TO:", username);
-        console.log("TYPE:", typeof username);
-
+        console.log('');
+        console.log('╔════════════════════════════════════════════════════════════╗');
+        console.log('║                    CONNECTING TO TIKTOK                   ║');
+        console.log('╚════════════════════════════════════════════════════════════╝');
+        console.log(`📡 Username: @${username}`);
+        console.log(`🕐 Time: ${new Date().toISOString()}`);
+        console.log('');
+        
         tiktokConnection = new WebcastPushConnection(username);
-
+        
+        const connectPromise = tiktokConnection.connect();
         const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Connection timeout')), 15000);
+            setTimeout(() => reject(new Error('Connection timeout (15s) - Make sure the user is LIVE')), 15000);
         });
         
-        await Promise.race([tiktokConnection.connect(), timeoutPromise]);
+        await Promise.race([connectPromise, timeoutPromise]);
         
         connected = true;
         saveState();
-        console.log(`✅ Connected to TikTok live: ${username}`);
+        console.log('');
+        console.log('╔════════════════════════════════════════════════════════════╗');
+        console.log('║                    ✅ CONNECTED!                          ║');
+        console.log('╚════════════════════════════════════════════════════════════╝');
+        console.log('');
         
-        if (tiktokConnection) {
-            tiktokConnection.on('member', async (data) => {
-                const user = data.uniqueId || data.userId;
-                if (user) {
-                    activeViewers.add(user);
-                    if (activeViewers.size > peakViewers) {
-                        peakViewers = activeViewers.size;
-                        saveState();
-                    }
-                    
-                    let avatarPath = null;
-                    if (data.profilePictureUrl) {
-                        avatarPath = await downloadAvatar(data.profilePictureUrl, user);
-                    }
-                    
-                    io.emit('viewer_join', { 
-                        user: user, 
-                        uniqueId: user, 
-                        nickname: data.nickname || user,
-                        isBot: false,
-                        avatar: avatarPath || '',
-                        avatarUrl: data.profilePictureUrl || ''
-                    });
-                    emitStatus();
-                }
-            });
+        // Reset state
+        realViewers.clear();
+        
+        // Reset event counter
+        eventCounter = {
+            member: 0,
+            member_leave: 0,
+            room_viewer_list: 0,
+            room_user_count: 0,
+            disconnected: 0,
+            like: 0,
+            gift: 0,
+            chat: 0
+        };
+
+        // ============================================================
+        // ===== MEMBER EVENT =====
+        // ============================================================
+        tiktokConnection.on('member', async (data) => {
+            const user = data.uniqueId || data.userId;
             
-            tiktokConnection.on('like', (data) => {
-                const count = data.likeCount || data.totalLikeCount || 1;
-                incrementLikes(count);
-                io.emit('like', { count: count });
-            });
-            
-            tiktokConnection.on('gift', async (data) => {
-                const user = data.uniqueId || data.userId;
-                const giftName = data.giftName || data.giftType;
-                const avatar = data.profilePictureUrl || data.user?.profilePictureUrl || '';
+            if (user) {
+                realViewers.add(user);
+                viewerQueue.add(user);
                 
-                if (user && giftName) {
-                    let avatarPath = null;
-                    if (avatar) {
-                        avatarPath = await downloadAvatar(avatar, user);
-                    }
-                    
-                    let mappedGift = giftName;
-                    if (giftName.toLowerCase().includes('rose')) mappedGift = 'rose';
-                    else if (giftName.toLowerCase().includes('donut')) mappedGift = 'donut';
-                    else if (giftName.toLowerCase().includes('donat')) mappedGift = 'donat';
-                    else if (giftName.toLowerCase().includes('finger') || giftName.toLowerCase().includes('heart')) mappedGift = 'fingerheart';
-                    
-                    if (['rose', 'donut', 'donat', 'fingerheart'].includes(mappedGift)) {
-                        updateGiftCount(mappedGift);
-                    }
-                    
-                    io.emit('gift', { 
-                        user: user, 
-                        giftName: mappedGift,
-                        originalName: giftName,
-                        avatar: avatarPath || '',
-                        avatarUrl: avatar,
-                        count: data.giftCount || 1
-                    });
+                if (getViewerCount() > peakViewers) {
+                    peakViewers = getViewerCount();
+                    saveState();
                 }
-            });
-            
-            tiktokConnection.on('disconnected', () => {
-                connected = false;
-                saveState();
+                
+                let avatarPath = null;
+                if (data.profilePictureUrl) {
+                    avatarPath = await downloadAvatar(data.profilePictureUrl, user);
+                }
+                
+                // AUTO ENTRY DISABLED: user must LIKE or send GIFT to spawn.
+                io.emit('viewer_waiting',{user:user,message:'Tap LIKE to enter the game!'});
                 emitStatus();
+                console.log(`👤 Viewer joined: ${user} (Total: ${realViewers.size})`);
+            }
+        });
+
+        // ============================================================
+        // ===== MEMBER_LEAVE EVENT =====
+        // ============================================================
+        tiktokConnection.on('member_leave', (data) => {
+            const user = data.uniqueId || data.userId;
+            
+            if (user && realViewers.has(user)) {
+                realViewers.delete(user);
+                io.emit('viewer_leave', { 
+                    user: user, 
+                    uniqueId: user,
+                    isBot: false,
+                    reason: 'leave'
+                });
+                emitStatus();
+                saveState();
+                console.log(`👋 Viewer left (member_leave): ${user} (Remaining: ${realViewers.size})`);
+            }
+        });
+
+        // ============================================================
+        // ===== ROOM_VIEWER_LIST EVENT =====
+        // ============================================================
+        tiktokConnection.on('room_viewer_list', async (data) => {
+            if (data && data.viewers && Array.isArray(data.viewers)) {
+                const currentViewers = new Set();
+                data.viewers.forEach(v => {
+                    const userId = v.uniqueId || v.userId;
+                    if (userId) currentViewers.add(userId);
+                });
+                
+                // Cari viewer yang leave
+                const leftViewers = [];
+                realViewers.forEach(user => {
+                    if (!currentViewers.has(user)) {
+                        leftViewers.push(user);
+                    }
+                });
+                
+                if (leftViewers.length > 0) {
+                    console.log(`👋 [room_viewer_list] ${leftViewers.length} viewers left: ${leftViewers.join(', ')}`);
+                    
+                    leftViewers.forEach(user => {
+                        realViewers.delete(user);
+                        io.emit('viewer_leave', { 
+                            user: user, 
+                            uniqueId: user,
+                            isBot: false,
+                            reason: 'left_room'
+                        });
+                    });
+                    
+                    emitStatus();
+                    saveState();
+                }
+            }
+        });
+
+        // ============================================================
+        // ===== ROOM_USER_COUNT EVENT =====
+        // ============================================================
+        tiktokConnection.on('room_user_count', (data) => {
+            // Hanya log, tidak memadam
+            const count = data.viewerCount || data.count || 0;
+            // console.log(`📊 Room user count: ${count}, Our realViewers: ${realViewers.size}`);
+        });
+
+        // ============================================================
+        // ===== DISCONNECTED EVENT =====
+        // ============================================================
+        tiktokConnection.on('disconnected', () => {
+            console.log('🔌 Disconnected from TikTok');
+            connected = false;
+            tiktokConnection = null;
+            
+            const users = Array.from(realViewers);
+            realViewers.clear();
+            
+            users.forEach(user => {
+                io.emit('viewer_leave', { 
+                    user: user, 
+                    uniqueId: user,
+                    isBot: false,
+                    reason: 'disconnect'
+                });
             });
             
-            tiktokConnection.on('error', (err) => {
-                console.log('⚠️ TikTok error:', err.message);
-            });
-        }
-        
+            saveState();
+            emitStatus();
+            console.log(`🧹 Removed ${users.length} real viewers due to disconnect`);
+        });
+
+        // ============================================================
+        // ===== LIKE EVENT =====
+        // ============================================================
+        tiktokConnection.on('like', async (data) => {
+            const count = data.likeCount || 1;
+            const user = data.uniqueId || data.userId;
+            if(!user) return;
+            console.log(`❤️ Like from: ${user} (+${count})`);
+            incrementLikes(count);
+            let avatarPath = '';
+            if (data.profilePictureUrl) {
+                avatarPath = await downloadAvatar(data.profilePictureUrl, user) || '';
+            }
+            viewerQueue.delete(user);
+            io.emit('like', { count, user, uniqueId:user, avatar: avatarPath });
+            io.emit('spawn_user',{user,avatar:avatarPath,source:'like'});
+        });
+
+        // ============================================================
+        // ===== GIFT EVENT =====
+        // ============================================================
+        tiktokConnection.on('gift', async (data) => {
+            const user = data.uniqueId || data.userId;
+            const giftName = data.giftName || data.giftType;
+            const avatar = data.profilePictureUrl || '';
+            
+            if (user && giftName) {
+                let avatarPath = null;
+                if (avatar) {
+                    avatarPath = await downloadAvatar(avatar, user);
+                }
+                
+                let mappedGift = giftName;
+                const lower = giftName.toLowerCase();
+                if (lower.includes('rose')) mappedGift = 'rose';
+                else if (lower.includes('donut')) mappedGift = 'donut';
+                else if (lower.includes('donat')) mappedGift = 'donat';
+                else if (lower.includes('finger') || lower.includes('heart')) mappedGift = 'fingerheart';
+                
+                if (['rose', 'donut', 'donat', 'fingerheart'].includes(mappedGift)) {
+                    updateGiftCount(mappedGift);
+                }
+                
+                io.emit('force_spawn', { user, uniqueId:user, avatar: avatarPath || '', source:'gift' });
+                if(user){ viewerQueue.delete(user); io.emit('spawn_user',{user,avatar:avatarPath||'',source:'gift'}); }
+                io.emit('gift', { 
+                    user: user, 
+                    giftName: mappedGift,
+                    originalName: giftName,
+                    avatar: avatarPath || '',
+                    count: data.giftCount || 1
+                });
+            }
+        });
+
+        // ============================================================
+        // ===== CHAT EVENT =====
+        // ============================================================
+        tiktokConnection.on('chat', (data) => {
+            // Hanya log ringkas
+            eventCounter.chat++;
+            if (eventCounter.chat % 50 === 0) {
+                console.log(`💬 [chat] ${eventCounter.chat} messages received`);
+            }
+        });
+
+        // ============================================================
+        // ===== ERROR EVENT =====
+        // ============================================================
+        tiktokConnection.on('error', (err) => {
+            console.log('❌ TikTok error:', err.message);
+        });
+
+        console.log('✅ All event listeners registered');
         emitStatus();
-        res.json({ success: true, message: `Connected to ${username}` });
+        res.json({ success: true, message: `Connected to @${username}` });
         
     } catch (e) {
-        console.log(`❌ Connection failed: ${e.message}`);
+        console.log('❌ Connection failed:', e.message);
         connected = false;
         tiktokConnection = null;
         saveState();
-        res.json({ success: false, error: e.message });
+        res.json({ success: false, error: e.message || 'Connection failed' });
     }
 });
 
@@ -510,17 +835,35 @@ app.post('/admin/disconnect', (req, res) => {
         try { tiktokConnection.disconnect(); } catch (e) {}
         tiktokConnection = null;
     }
+    
+    const users = Array.from(realViewers);
+    realViewers.clear();
+    
+    users.forEach(user => {
+        io.emit('viewer_leave', { 
+            user: user, 
+            uniqueId: user,
+            isBot: false,
+            reason: 'disconnect'
+        });
+    });
+    
     saveState();
     emitStatus();
     res.json({ success: true });
 });
 
+// ============================================================
+// ===== BOT VIEWER =====
+// ============================================================
 app.post('/admin/viewer', async (req, res) => {
     const u = req.body.user || ('viewer_' + Date.now());
-    activeViewers.add(u);
     
-    if (activeViewers.size > peakViewers) {
-        peakViewers = activeViewers.size;
+    botViewers.add(u);
+    realViewers.delete(u);
+    
+    if (getViewerCount() > peakViewers) {
+        peakViewers = getViewerCount();
         saveState();
     }
     
@@ -540,54 +883,81 @@ app.post('/admin/viewer', async (req, res) => {
     });
     io.emit('spawn_viewer', { user: u });
     emitStatus();
-    res.json({ success: true, user: u });
+    saveState();
+    
+    console.log(`🤖 Bot viewer added: ${u}`);
+    res.json({ success: true, user: u, isBot: true });
 });
 
+// ============================================================
+// ===== REMOVE BOT =====
+// ============================================================
 app.post('/admin/remove_bot', (req, res) => {
     const user = req.body.user;
-    if (user && activeViewers.has(user)) {
-        activeViewers.delete(user);
+    if (user && botViewers.has(user)) {
+        botViewers.delete(user);
         saveState();
-        io.emit('viewer_leave', { user: user, uniqueId: user });
+        io.emit('viewer_leave', { 
+            user: user, 
+            uniqueId: user,
+            isBot: true,
+            reason: 'admin_remove'
+        });
         emitStatus();
-        res.json({ success: true, message: `Removed ${user}` });
+        console.log(`🤖 Bot removed by admin: ${user}`);
+        res.json({ success: true, message: `Removed bot ${user}` });
     } else {
-        res.json({ success: false, message: 'User not found' });
+        res.json({ success: false, message: 'Bot not found' });
     }
 });
 
 app.post('/admin/remove_bots', (req, res) => {
     const count = parseInt(req.body.count) || 10;
-    const viewersArray = Array.from(activeViewers);
+    const viewersArray = Array.from(botViewers);
     const toRemove = viewersArray.slice(0, Math.min(count, viewersArray.length));
     
     let removed = 0;
     toRemove.forEach(user => {
-        if (activeViewers.has(user)) {
-            activeViewers.delete(user);
-            io.emit('viewer_leave', { user: user, uniqueId: user });
+        if (botViewers.has(user)) {
+            botViewers.delete(user);
+            io.emit('viewer_leave', { 
+                user: user, 
+                uniqueId: user,
+                isBot: true,
+                reason: 'admin_remove'
+            });
             removed++;
         }
     });
     
     saveState();
     emitStatus();
+    console.log(`🤖 Removed ${removed} bots`);
     res.json({ success: true, removed: removed });
 });
 
 app.post('/admin/remove_all_bots', (req, res) => {
-    const users = Array.from(activeViewers);
-    activeViewers.clear();
+    const users = Array.from(botViewers);
+    botViewers.clear();
     saveState();
     
     users.forEach(user => {
-        io.emit('viewer_leave', { user: user, uniqueId: user });
+        io.emit('viewer_leave', { 
+            user: user, 
+            uniqueId: user,
+            isBot: true,
+            reason: 'admin_remove'
+        });
     });
     
     emitStatus();
+    console.log(`🤖 Removed all ${users.length} bots`);
     res.json({ success: true, removed: users.length });
 });
 
+// ============================================================
+// ===== LIKES =====
+// ============================================================
 app.post('/admin/likes', (req, res) => {
     const count = req.body.count || 100;
     incrementLikes(count);
@@ -602,9 +972,12 @@ app.post('/admin/reset_likes', (req, res) => {
     res.json({ success: true });
 });
 
+// ============================================================
+// ===== GIFTS =====
+// ============================================================
 function getGiftUser(body) {
     if (body && body.user) return body.user;
-    const first = Array.from(activeViewers)[0];
+    const first = Array.from(getAllViewers())[0];
     return first || 'viewer_1';
 }
 
@@ -661,14 +1034,18 @@ io.on('connection', (socket) => {
         mode,
         username,
         connected,
-        viewers: activeViewers.size,
+        viewers: getViewerCount(),
+        realViewers: realViewers.size,
+        botViewers: botViewers.size,
         target: getTarget(),
         peak: peakViewers,
         stats: appData.stats,
-        highScore: appData.highScore24
+        highScore: appData.highScoreAllTime,
+        leaderboard24h: leaderboard24h
     });
     
-    activeViewers.forEach(user => {
+    getAllViewers().forEach(user => {
+        const isBot = botViewers.has(user);
         const cleanUser = user.startsWith('@') ? user.substring(1) : user;
         let avatarPath = null;
         if (AVATAR_CACHE.has(cleanUser)) {
@@ -678,22 +1055,62 @@ io.on('connection', (socket) => {
             user: user, 
             uniqueId: user, 
             nickname: user,
-            isBot: true,
+            isBot: isBot,
             avatar: avatarPath || '',
             avatarUrl: ''
         });
     });
     
-    socket.on('disconnect', () => {
+    socket.on('balloon_removed', (data) => {
+        const user = data.user;
+        if (user) {
+            const cleanUser = user.startsWith('@') ? user.substring(1) : user;
+            if (realViewers.has(cleanUser)) {
+                realViewers.delete(cleanUser);
+                console.log(`👤 Viewer removed (balloon dropped): ${cleanUser}`);
+                emitStatus();
+                saveState();
+            }
+        }
+    });
+    
+    
+    socket.on('round_finished', () => {
+        io.emit('force_round_reset');
+        console.log('🏁 Round finished - waiting for new likes');
+    });
+
+
+    socket.on('player_killed', ({user}) => {
+        if (!user) return;
+        realViewers.delete(user);
+        appData.viewers = (appData.viewers || []).filter(v => v !== user);
+        saveState();
+        io.emit('player_killed', {user});
+        console.log(`💀 Removed ${user} from active round (score preserved)`);
+    });
+
+socket.on('disconnect', () => {
         console.log('🔌 Client disconnected:', socket.id);
     });
 });
 
 // ============================================================
-// AUTO-SAVE
+// ===== SETUP INTERVALS =====
 // ============================================================
+
+// Refresh viewer list setiap 30 saat
+setInterval(refreshViewerList, 30000);
+
+// Check leaderboard reset setiap jam
+setInterval(checkAndResetLeaderboard, 60 * 60 * 1000);
+
+// Auto-save setiap 30 saat
 setInterval(saveState, 30000);
 
+// ============================================================
+// ===== SHUTDOWN HANDLERS =====
+// ============================================================
 process.on('SIGINT', () => {
     saveState();
     process.exit(0);
@@ -705,15 +1122,24 @@ process.on('SIGTERM', () => {
 });
 
 // ============================================================
-// START SERVER
+// ===== START SERVER =====
 // ============================================================
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log('================================================');
-    console.log('🚀 SERVER RUNNING on port', PORT);
-    console.log('📡 MODE =', mode);
-    console.log('📁 Avatars saved to:', AVATAR_DIR);
-    console.log('🧹 Auto-delete avatars after 24 hours');
-    console.log('📥 Download queue: 1 concurrent');
-    console.log('================================================');
+    console.log('');
+    console.log('╔════════════════════════════════════════════════════════════╗');
+    console.log('║  🚀 SERVER RUNNING                                      ║');
+    console.log('╠════════════════════════════════════════════════════════════╣');
+    console.log(`║  📡 Port: ${PORT}`);
+    console.log(`║  📡 Mode: ${mode}`);
+    console.log(`║  🔌 TikTok: ${WebcastPushConnection ? '✅ LOADED' : '❌ NOT LOADED'}`);
+    console.log(`║  📁 Avatars: ${AVATAR_DIR}`);
+    console.log(`║  🔄 Refresh: Every 30 seconds`);
+    console.log(`║  🏆 Leaderboard: 24h (resets at 12:00 AM)`);
+    console.log(`║  👤 Real viewers: member_leave + room_viewer_list + refresh`);
+    console.log(`║  🤖 Bot viewers: Can be removed by admin`);
+    console.log('╚════════════════════════════════════════════════════════════╝');
+    console.log('');
+    console.log('📡 Waiting for TikTok events...');
+    console.log('');
 });
